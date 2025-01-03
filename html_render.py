@@ -33,7 +33,7 @@ def create_job_card(row):
                         <td style="padding-top: 12px;">
                             <p style="padding: 0 0 4px 0; font-size: 14px; color: #4b5563;">📍 {row['location']}</p>
                             <p style="padding: 0 0 4px 0; font-size: 14px; color: #4b5563;">💰 {row['min_amount']} - {row['max_amount']}</p>
-                            <p style="padding: 0; font-size: 14px; color: #4b5563;">⏰ {row['job_type']}</p>
+                            <p style="padding: 0; font-size: 14px; color: #4b5563;">💻 {'Remote' if row['job_type'] else 'Not Remote'}</p>
                         </td>
                     </tr>
                 </table>
