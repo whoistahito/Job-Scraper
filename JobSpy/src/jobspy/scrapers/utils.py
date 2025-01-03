@@ -65,6 +65,8 @@ class RequestsRotating(RotatingProxySession, requests.Session):
         self.clear_cookies = clear_cookies
         self.allow_redirects = True
         self.setup_session(has_retry, delay)
+        # take the first element from cycle
+        self.proxies = next(self.proxy_cycle)
 
     def setup_session(self, has_retry, delay):
         if has_retry:
