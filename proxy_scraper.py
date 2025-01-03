@@ -272,6 +272,9 @@ async def scrape(methods):
 def get_valid_proxies(protocols, batch_size, min_valid_size):
     proxies_set = asyncio.run(scrape(protocols))
     all_proxies = list(proxies_set)
+    if "socks5" in protocols:
+        modified_list = ['socks5://' + address for address in all_proxies]
+        all_proxies = modified_list
     accumulated_valid_proxies = set()
 
     for start_index in range(0, len(all_proxies), batch_size):
@@ -280,6 +283,7 @@ def get_valid_proxies(protocols, batch_size, min_valid_size):
 
         valid_proxies = check(current_batch)
         accumulated_valid_proxies.update(valid_proxies)
+        print(f"Total valid proxies: {len(accumulated_valid_proxies)}")
 
         if len(accumulated_valid_proxies) >= min_valid_size:
             return list(accumulated_valid_proxies)
