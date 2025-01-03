@@ -2,7 +2,10 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
 
+from JobSpy.src.jobspy.scrapers.utils import create_logger
 from credential import Credential
+
+logger = create_logger("email_manager")
 
 
 def send_email(body, receiver_email, is_html=True):
@@ -34,12 +37,11 @@ def send_email(body, receiver_email, is_html=True):
 
         # Send the email
         server.sendmail(sender_email, receiver_email, message.as_string())
-        print("Email sent successfully!")
+        logger.info(f"Email sent successfully to {receiver_email}!")
 
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error while sending email: {e}")
 
     finally:
         # Close the connection to the SMTP server
         server.quit()
-

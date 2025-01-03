@@ -2,7 +2,10 @@ import time
 
 import google.generativeai as genai
 
+from JobSpy.src.jobspy.scrapers.utils import create_logger
 from credential import Credential
+
+logger = create_logger("llm")
 
 
 def validate_job_title(job_title, search_term, try_count=1):
@@ -36,7 +39,6 @@ def validate_job_title(job_title, search_term, try_count=1):
         return False
     else:
         if try_count == 4:
-            print("Could not validate job title")
+            logger.error("Could not validate job title")
             return False
         return validate_job_title(job_title, search_term, try_count + 1)
-

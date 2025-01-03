@@ -5,10 +5,13 @@ import pandas as pd
 
 from JobSpy.src.jobspy import Site
 from JobSpy.src.jobspy import scrape_jobs
+from JobSpy.src.jobspy.scrapers.utils import create_logger
 from email_manager import send_email
 from html_render import create_job_card, get_html_template
 from llm import validate_job_title
 from proxy_scraper import get_valid_proxies
+
+logger = create_logger("main")
 
 
 def find_jobs(site, search_term, google_search_term, location, prox_list):
@@ -37,9 +40,9 @@ def process_site_jobs(site, search_term, location, proxies):
         try:
             return find_jobs(site, search_term, search_term, location, next(proxies_iter))
         except Exception as err:
-            print(f"Exception while processing {site}: {err}")
+            logger.error(f"Exception while processing {site}: {err}")
             retries += 1
-            print(f"Retrying {retries}/{max_retries} with a new proxy...")
+            logger.error(f"Retrying {retries}/{max_retries} with a new proxy...")
             time.sleep(random.randint(1, 5))  # Short wait before retrying
     return pd.DataFrame()  # Return an empty DataFrame if all retries fail
 
@@ -67,11 +70,11 @@ def process_and_notify_jobs(search_term, location, email):
         html_template = get_html_template(html_content)
         send_email(html_template, email, is_html=True)
     else:
-        print("No jobs found based on the criteria.")
+        logger.error("No jobs found based on the criteria.")
 
 
 if __name__ == "__main__":
     try:
         process_and_notify_jobs()
     except Exception as err:
-        print(f"Error during job processing: {err}")
+        logger.error(f"Error during job processing: {err}")

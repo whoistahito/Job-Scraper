@@ -5,9 +5,12 @@ import threading
 from bs4 import BeautifulSoup
 import httpx
 
+from JobSpy.src.jobspy.scrapers.utils import create_logger
 from JobSpy.src.jobspy.scrapers.utils import (
     create_session,
 )
+
+logger = create_logger("proxy_scraper")
 
 headers_initial = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -187,7 +190,7 @@ def is_https_working(proxy):
 
 
 def check(proxies):
-    print(f"Checking {len(proxies)} proxies")
+    logger.info(f"Checking {len(proxies)} proxies")
     valid_proxies = []
 
     def check_proxy(proxy):
@@ -205,7 +208,7 @@ def check(proxies):
     for t in threads:
         t.join()
 
-    print(f"Found {len(valid_proxies)} valid proxies" + " ")
+    logger.info(f"Found {len(valid_proxies)} valid proxies" + " ")
     return valid_proxies
 
 
@@ -237,12 +240,6 @@ scrapers = [
     GitHubScraper("socks4", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/socks4.txt"),
     GitHubScraper("socks5", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/socks5.txt"),
 ]
-
-
-def verbose_print(verbose, message):
-    if verbose:
-        # print(message)
-        pass
 
 
 async def scrape(methods):
@@ -283,7 +280,7 @@ def get_valid_proxies(protocols, batch_size, min_valid_size):
 
         valid_proxies = check(current_batch)
         accumulated_valid_proxies.update(valid_proxies)
-        print(f"Total valid proxies: {len(accumulated_valid_proxies)}")
+        logger.info(f"Total valid proxies: {len(accumulated_valid_proxies)}")
 
         if len(accumulated_valid_proxies) >= min_valid_size:
             return list(accumulated_valid_proxies)
