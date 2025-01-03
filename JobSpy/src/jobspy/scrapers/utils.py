@@ -12,7 +12,8 @@ from requests.adapters import HTTPAdapter, Retry
 
 from ..jobs import CompensationInterval, JobType
 
-
+logging.basicConfig(filename='output.log', level=logging.ERROR,
+                    format='%(asctime)s:%(levelname)s:%(message)s')
 def create_logger(name: str):
     logger = logging.getLogger(f"JobSpy:{name}")
     logger.propagate = False
