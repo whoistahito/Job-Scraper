@@ -11,10 +11,6 @@ def validate_job_title(job_title, search_term, try_count=1):
     model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(f"""
     Below are some examples showing a question, job title, search term, and answer format:
-    Question: Is this job title related to searching term?
-    Job title: Construction Project Manager, 
-    Search term: architectural project manager, 
-    Answer: No
     
     Question: Is this job title related to searching term?
     Job title: IT-Architekt*in (m/w/d), 
@@ -22,7 +18,7 @@ def validate_job_title(job_title, search_term, try_count=1):
     Answer: No
 
     Question: Is this job title related to searching term?
-    Job title: Senior Architectural Designer / Project Manager - job post , 
+    Job title: Senior Architectural Designer / Project Manager , 
     Search term: architectural project manager ,
     Answer: Yes
     
