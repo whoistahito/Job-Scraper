@@ -1,3 +1,4 @@
+from datetime import datetime
 import random
 import time
 
@@ -47,6 +48,12 @@ def process_site_jobs(site, search_term, location, proxies):
     return pd.DataFrame()  # Return an empty DataFrame if all retries fail
 
 
+def preprocess_job(row, today):
+    row['new_badge'] = row['date_posted'] == today
+    row['has_salary'] = row.get('min_amount') or row.get('max_amount')
+    return row
+
+
 def process_and_notify_jobs(search_term, location, email):
     """Process job searches across sites and send notification email."""
     proxies = get_valid_proxies(['socks5'], 200, 2)
@@ -66,7 +73,9 @@ def process_and_notify_jobs(search_term, location, email):
         # Filter and render job listings
         filtered_jobs = all_found_jobs[
             all_found_jobs['title'].apply(lambda title: validate_job_title(title, search_term))]
-        html_content = ''.join(filtered_jobs.apply(create_job_card, axis=1))
+        today = datetime.today().strftime('%Y-%m-%d')
+        filtered_jobs_with_html_tags = filtered_jobs.apply(lambda row: preprocess_job(row, today), axis=1)
+        html_content = ''.join(filtered_jobs_with_html_tags.apply(create_job_card, axis=1))
         html_template = get_html_template(html_content)
         send_email(html_template, email, is_html=True)
     else:

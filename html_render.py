@@ -15,6 +15,12 @@ greetings = [
 
 
 def create_job_card(row):
+    new_badge = "<span style='display: inline-block; background-color: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 9999px; font-size: 12px; margin-left: 8px;'>New</span>" if \
+    row['new_badge'] else ""
+
+    salary_info = f"<p style='padding: 0 0 4px 0; font-size: 14px; color: #4b5563;'>💰 {row.get('min_amount', '')} - {row.get('max_amount', '')}</p>" if \
+    row['has_salary'] else ""
+
     html_card = f"""
     <table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 20px; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
         <tr>
@@ -24,7 +30,7 @@ def create_job_card(row):
                         <td>
                             <h2 style="padding: 0; font-size: 18px; color: #1f2937; font-weight: 600; margin-bottom: 8px;">
                                 {row['title']}
-                                <span style="display: inline-block; background-color: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 9999px; font-size: 12px; margin-left: 8px;">New</span>
+                                {new_badge}  <!-- Include new badge conditionally -->
                             </h2>
                             <p style="padding: 0; font-size: 14px; color: #4b5563;">{row['company']}</p>
                         </td>
@@ -32,7 +38,7 @@ def create_job_card(row):
                     <tr>
                         <td style="padding-top: 12px;">
                             <p style="padding: 0 0 4px 0; font-size: 14px; color: #4b5563;">📍 {row['location']}</p>
-                            <p style="padding: 0 0 4px 0; font-size: 14px; color: #4b5563;">💰 {row['min_amount']} - {row['max_amount']}</p>
+                            {salary_info}  
                             <p style="padding: 0; font-size: 14px; color: #4b5563;">💻 {'Remote' if row['job_type'] else 'Not Remote'}</p>
                         </td>
                     </tr>
@@ -43,7 +49,7 @@ def create_job_card(row):
             <td style="border-top: 1px solid #e5e7eb; padding: 12px 16px; background-color: #f9fafb;">
                 <table cellpadding="0" cellspacing="0" style="width: 100%;">
                     <tr>
-                        <td style="font-size: 12px; color: #6b7280;">Posted on {row['date_posted']}</td>
+                        <td style="font-size: 12px; color: #6b7280;">Posted on {row['date_posted'] if row['date_posted'] else 'this Week'}</td>
                         <td align="right">
                             <a href="{row['job_url']}" style="background-color: #3b82f6; color: #ffffff; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-size: 14px;">View Job</a>
                         </td>
