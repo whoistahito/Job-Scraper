@@ -1,25 +1,24 @@
 from __future__ import annotations
 
-import re
-import logging
 from itertools import cycle
+import logging
+import re
 
-import requests
-import tls_client
-import numpy as np
 from markdownify import markdownify as md
+import numpy as np
+import requests
 from requests.adapters import HTTPAdapter, Retry
+import tls_client
 
 from ..jobs import CompensationInterval, JobType
 
-logging.basicConfig(filename='output.log', level=logging.ERROR,
-                    format='%(asctime)s:%(levelname)s:%(message)s')
+
 def create_logger(name: str):
     logger = logging.getLogger(f"JobSpy:{name}")
     logger.propagate = False
     if not logger.handlers:
         logger.setLevel(logging.INFO)
-        console_handler = logging.StreamHandler()
+        console_handler = logging.FileHandler("output.log")
         format = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
         formatter = logging.Formatter(format)
         console_handler.setFormatter(formatter)
