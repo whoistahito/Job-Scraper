@@ -17,7 +17,7 @@ def send_email(body, receiver_email, is_html=True):
     password = cred.get_email_password()
 
     # Create the email content
-    subject = "Test Email"
+    subject = "Found some job opportunities for you!"
 
     # Set up the MIME
     message = MIMEMultipart()
