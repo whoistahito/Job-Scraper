@@ -7,18 +7,18 @@ This module contains routines to scrape Google.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+import json
 import math
 import re
-import json
 from typing import Tuple
-from datetime import datetime, timedelta
 
 from .constants import headers_jobs, headers_initial, async_param
 from .. import Scraper, ScraperInput, Site
-from ..utils import extract_emails_from_text, create_logger, extract_job_type
 from ..utils import (
     create_session,
 )
+from ..utils import extract_emails_from_text, create_logger, extract_job_type
 from ...jobs import (
     JobPost,
     JobResponse,
@@ -130,7 +130,7 @@ class GoogleJobsScraper(Scraper):
             query = self.scraper_input.google_search_term
 
         params = {"q": query, "udm": "8"}
-        response = self.session.get(self.url, headers=headers_initial, params=params)
+        response = self.session.get(self.url, headers=headers_initial, params=params, timeout=10)
 
         pattern_fc = r'<div jsname="Yust4d"[^>]+data-async-fc="([^"]+)"'
         match_fc = re.search(pattern_fc, response.text)
