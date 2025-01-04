@@ -83,7 +83,10 @@ def process_and_notify_jobs(search_term, location, email):
 
 
 if __name__ == "__main__":
-    try:
-        process_and_notify_jobs()
-    except Exception as err:
-        logger.error(f"Error during job processing: {err}")
+    schedule.every().day.at("16:00").do(
+        lambda: process_and_notify_jobs())
+
+    # Keep the script running
+    while True:
+        schedule.run_pending()
+        time.sleep(60 * 60)
