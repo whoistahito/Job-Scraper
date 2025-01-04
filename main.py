@@ -3,6 +3,7 @@ import random
 import time
 
 import pandas as pd
+import schedule
 
 from JobSpy.src.jobspy import Site
 from JobSpy.src.jobspy import scrape_jobs
