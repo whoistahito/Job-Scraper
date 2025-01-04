@@ -15,12 +15,12 @@ from proxy_scraper import get_valid_proxies
 logger = create_logger("main")
 
 
-def find_jobs(site, search_term, google_search_term, location, prox_list):
+def find_jobs(site, search_term, location, prox_list):
     jobs = scrape_jobs(
         site_name=site,
         search_term=search_term,
         radius=15,
-        google_search_term=f"{google_search_term} in {location}",
+        google_search_term=f"{search_term} in {location}",
         location=location,
         results_wanted=20,
         hours_old=120,
@@ -39,7 +39,7 @@ def process_site_jobs(site, search_term, location, proxies):
 
     while retries < max_retries:
         try:
-            return find_jobs(site, search_term, search_term, location, next(proxies_iter))
+            return find_jobs(site, search_term, location, next(proxies_iter))
         except Exception as err:
             logger.error(f"Exception while processing {site}: {err}")
             retries += 1
