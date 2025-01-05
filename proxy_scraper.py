@@ -125,7 +125,41 @@ class ProxyListDownloadScraper(Scraper):
         return super().get_url(anon=self.anon, **kwargs)
 
 
-# For websites using table in html
+class GeneralTableScraper2(Scraper):
+    async def handle(self, response):
+        soup = BeautifulSoup(response.text, "html.parser")
+        proxies = set()
+        # Find the table in the soup.
+        table = soup.find("table", attrs={"class": "table"}) or soup.find("tbody")
+
+        if not table:
+            return "\n"
+
+        for row in table.find_all("tr"):
+            cells = row.find_all("td")
+            if len(cells) < 2:
+                continue
+
+            # Extract IP from either <script> or directly from the cell.
+            ip_script = cells[0].find("script")
+            if ip_script and 'Base64.decode' in ip_script.string:
+                # Decode the IP address if encoded
+                encoded_ip = ip_script.string.split('"')[1]
+                ip_address = base64.b64decode(encoded_ip).decode('utf-8')
+            else:
+                # Fallback: direct text in case of non-encoded IP
+                ip_address = cells[0].text.strip()
+
+            # Extract the port number
+            port = cells[1].text.strip()
+
+            # Form the full proxy string
+            proxy = f"{ip_address}:{port}"
+            proxies.add(proxy)
+
+        return "\n".join(proxies)
+
+
 class GeneralTableScraper(Scraper):
 
     async def handle(self, response):
@@ -224,6 +258,8 @@ scrapers = [
     ProxyListDownloadScraper("http", "transparent"),
     ProxyListDownloadScraper("http", "anonymous"),
     GeneralTableScraper("https", "http://sslproxies.org"),
+    GeneralTableScraper2("socks5", "http://free-proxy.cz/en/proxylist/country/all/socks5/ping/level1"),
+    GeneralTableScraper2("https", "http://free-proxy.cz/en/proxylist/country/all/https/ping/level1"),
     GeneralTableScraper("http", "http://free-proxy-list.net"),
     GeneralTableScraper("http", "http://us-proxy.org"),
     GeneralTableScraper("https", "https://proxy-tools.com/proxy/https"),
@@ -270,7 +306,8 @@ async def scrape(methods):
 def get_valid_proxies(protocols, batch_size, min_valid_size):
     proxies_set = asyncio.run(scrape(protocols))
     all_proxies = list(proxies_set)
-    if "socks5" in protocols:
+    logger.info(f"Total proxies: {len(all_proxies)}")
+    if "socks5" or "socks" in protocols:
         modified_list = ['socks5://' + address for address in all_proxies]
         all_proxies = modified_list
     accumulated_valid_proxies = set()
