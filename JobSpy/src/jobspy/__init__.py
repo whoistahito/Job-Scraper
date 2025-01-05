@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-import pandas as pd
-from typing import Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+from typing import Tuple
+
+import pandas as pd
 
 from .jobs import JobType, Location
-from .scrapers.utils import set_logger_level, extract_salary, create_logger
-from .scrapers.indeed import IndeedScraper
-from .scrapers.ziprecruiter import ZipRecruiterScraper
-from .scrapers.glassdoor import GlassdoorScraper
-from .scrapers.google import GoogleJobsScraper
-from .scrapers.linkedin import LinkedInScraper
 from .scrapers import SalarySource, ScraperInput, Site, JobResponse, Country
 from .scrapers.exceptions import (
     LinkedInException,
@@ -19,6 +15,12 @@ from .scrapers.exceptions import (
     GlassdoorException,
     GoogleJobsException,
 )
+from .scrapers.glassdoor import GlassdoorScraper
+from .scrapers.google import GoogleJobsScraper
+from .scrapers.indeed import IndeedScraper
+from .scrapers.linkedin import LinkedInScraper
+from .scrapers.utils import set_logger_level, extract_salary, create_logger
+from .scrapers.ziprecruiter import ZipRecruiterScraper
 
 
 def scrape_jobs(
@@ -209,6 +211,14 @@ def scrape_jobs(
         # Step 2: Concatenate the filtered DataFrames
         jobs_df = pd.concat(filtered_dfs, ignore_index=True)
 
+        jobs_df['date_posted'] = pd.to_datetime(jobs_df['date_posted']).dt.date
+
+        today = datetime.today().date()  # Get today's date in date format
+        jobs_df['new_badge'] = jobs_df['date_posted'] == today
+
+        # Fill NaN values in 'date_posted' with the string "this week"
+        jobs_df['date_posted'] = jobs_df['date_posted'].fillna('this week')
+
         # Desired column order
         desired_order = [
             "id",
@@ -219,9 +229,11 @@ def scrape_jobs(
             "company",
             "location",
             "date_posted",
+            "new_badge",
             "job_type",
             "salary_source",
             "interval",
+            "has_salary",
             "min_amount",
             "max_amount",
             "currency",
