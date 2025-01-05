@@ -27,7 +27,7 @@ def create_logger(name: str):
 
 
 class RotatingProxySession:
-    def __init__(self, proxies=None, only_http=False):
+    def __init__(self, proxies=None):
         if isinstance(proxies, str):
             self.proxy_cycle = cycle([self.format_proxy(proxies)])
         elif isinstance(proxies, list):
@@ -40,19 +40,10 @@ class RotatingProxySession:
             self.proxy_cycle = None
 
     @staticmethod
-    def format_proxy(proxy, only_http=False):
+    def format_proxy(proxy):
         """Utility method to format a proxy string into a dictionary."""
         if not proxy.startswith("http://") and not proxy.startswith("https://") and not proxy.startswith("socks5://"):
             proxy = f"http://{proxy}"
-
-        if proxy.startswith("socks5://"):
-            if only_http:
-                return {"http": proxy}
-
-            return {"http": proxy, "https": proxy}
-
-        if only_http:
-            return {"http": proxy}
 
         return {"http": proxy, "https": proxy}
 
