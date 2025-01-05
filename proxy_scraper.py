@@ -1,10 +1,12 @@
 import asyncio
+import base64
 import re
 import threading
 
 from bs4 import BeautifulSoup
 import httpx
 
+from JobSpy.src.jobspy.scrapers.google import GoogleJobsScraper
 from JobSpy.src.jobspy.scrapers.utils import create_logger
 from JobSpy.src.jobspy.scrapers.utils import (
     create_session,
@@ -181,8 +183,8 @@ def is_https_working(proxy):
         params = {"q": "jobs in Texas USA", "udm": "8"}
         response = create_session(proxies=proxy, is_tls=False, ca_cert=None, has_retry=False, clear_cookies=True,
                                   delay=1).get(
-            'https://google.com', headers=headers_initial, timeout=5, params=params)
-        if response.status_code == 200:
+            'https://www.google.com/search', headers=headers_initial, timeout=20, params=params)
+        if response.status_code == 200 and len(GoogleJobsScraper._find_job_info_initial_page(response.text)) > 0:
             return True
     except Exception as e:
         return False
@@ -208,7 +210,6 @@ def check(proxies):
     for t in threads:
         t.join()
 
-    logger.info(f"Found {len(valid_proxies)} valid proxies" + " ")
     return valid_proxies
 
 
