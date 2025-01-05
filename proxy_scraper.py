@@ -324,3 +324,11 @@ def get_valid_proxies(protocols, batch_size, min_valid_size):
             return list(accumulated_valid_proxies)
 
     return []
+
+
+async def test_scraper():
+    async with httpx.AsyncClient(follow_redirects=True) as client:
+        scraper = GeneralTableScraper("socks5", "http://free-proxy.cz/en/proxylist/country/all/socks5/ping/level1")
+        # Scrap the proxies using the SpysMeScraper
+        proxies = await scraper.scrape(client)
+        print(proxies)
