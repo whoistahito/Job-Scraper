@@ -136,6 +136,8 @@ class GoogleJobsScraper(Scraper):
         match_fc = re.search(pattern_fc, response.text)
         data_async_fc = match_fc.group(1) if match_fc else None
         jobs_raw = self._find_job_info_initial_page(response.text)
+        if not jobs_raw:
+            raise Exception("No jobs found on the initial page")
         jobs = []
         for job_raw in jobs_raw:
             job_post = self._parse_job(job_raw)
