@@ -2,6 +2,7 @@ import asyncio
 import base64
 import re
 import threading
+import time
 
 from bs4 import BeautifulSoup
 import httpx
@@ -303,7 +304,7 @@ async def scrape(methods):
     return set(proxies)
 
 
-def get_valid_proxies(protocols, batch_size, min_valid_size):
+def get_valid_proxies(protocols, batch_size, min_valid_size, try_count=0):
     proxies_set = asyncio.run(scrape(protocols))
     all_proxies = list(proxies_set)
     logger.info(f"Total proxies: {len(all_proxies)}")
@@ -322,8 +323,11 @@ def get_valid_proxies(protocols, batch_size, min_valid_size):
 
         if len(accumulated_valid_proxies) >= min_valid_size:
             return list(accumulated_valid_proxies)
-
-    return []
+    if try_count >= 5:
+        return []
+    time.sleep(60 * 10)
+    try_count += 1
+    get_valid_proxies(protocols, batch_size, min_valid_size, try_count)
 
 
 async def test_scraper():
