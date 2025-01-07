@@ -88,7 +88,6 @@ def get_proxies():
     proxies = get_valid_proxies(['socks5'], 200, 2)
     if not proxies:
         raise Exception("Not enough proxies available.")
-    time.sleep(10)  # Initial delay for proxy availability
     return proxies
 
 
