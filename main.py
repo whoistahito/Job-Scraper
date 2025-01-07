@@ -6,7 +6,9 @@ import schedule
 
 from JobSpy.src.jobspy import Site
 from JobSpy.src.jobspy import scrape_jobs
+from JobSpy.src.jobspy.jobs import JobType
 from JobSpy.src.jobspy.scrapers.utils import create_logger
+from db.user_manager import UserManager
 from email_manager import send_email
 from html_render import create_job_card, get_html_template
 from llm import validate_job_title
@@ -76,9 +78,16 @@ def process_and_notify_jobs(search_term, location, job_type, email):
         logger.error("No jobs found based on the criteria.")
 
 
+def notify_users():
+    """Notify all users based on their preferences."""
+    users = UserManager().get_all_users()
+    for user in users:
+        process_and_notify_jobs(user.position, user.location, JobType.from_string(user.job_type), user.email)
+
+
 if __name__ == "__main__":
     schedule.every().day.at("16:00").do(
-        lambda: process_and_notify_jobs())
+        lambda: notify_users())
 
     # Keep the script running
     while True:
