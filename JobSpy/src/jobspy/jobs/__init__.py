@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Optional
 from datetime import date
 from enum import Enum
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -54,6 +55,14 @@ class JobType(Enum):
     OTHER = ("other",)
     SUMMER = ("summer",)
     VOLUNTEER = ("volunteer",)
+
+    @staticmethod
+    def from_string(job_string):
+        job_string = job_string.lower()
+        for job_type in JobType:
+            if job_string in job_type.value:
+                return job_type.value[0]
+        return None
 
 
 class Country(Enum):
