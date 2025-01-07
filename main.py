@@ -6,7 +6,6 @@ import schedule
 
 from JobSpy.src.jobspy import Site
 from JobSpy.src.jobspy import scrape_jobs
-from JobSpy.src.jobspy.jobs import JobType
 from JobSpy.src.jobspy.scrapers.utils import create_logger
 from db.user_manager import UserManager
 from email_manager import send_email
@@ -50,39 +49,47 @@ def process_site_jobs(site, search_term, location, job_type, proxies):
     return pd.DataFrame()  # Return an empty DataFrame if all retries fail
 
 
-def process_and_notify_jobs(search_term, location, job_type, email):
+def notify_jobs(email, filtered_jobs):
     """Process job searches across sites and send notification email."""
-    proxies = get_valid_proxies(['socks5'], 200, 2)
-    if not proxies:
-        raise Exception("Not enough proxies available.")
-
-    time.sleep(10)  # Initial delay for proxy availability
-
-    all_found_jobs = pd.DataFrame()
-
-    for site in [Site.LINKEDIN, Site.INDEED, Site.GOOGLE]:
-        found_jobs = process_site_jobs(site, search_term, location, job_type, proxies)
-        all_found_jobs = pd.concat([all_found_jobs, found_jobs], ignore_index=True)
-        time.sleep(random.randint(5, 10))
-
-    if not all_found_jobs.empty:
+    if not filtered_jobs.empty:
         # Filter and render job listings
-        filtered_jobs = all_found_jobs[
-            all_found_jobs['title'].apply(lambda title: validate_job_title(title, search_term))
-        ].copy()
         filtered_jobs['has_salary'] = filtered_jobs["min_amount"].notna() | filtered_jobs["max_amount"].notna()
         html_content = ''.join(filtered_jobs.apply(create_job_card, axis=1))
         html_template = get_html_template(html_content)
         send_email(html_template, email, is_html=True)
+        return True
     else:
         logger.error("No jobs found based on the criteria.")
+        return False
 
 
 def notify_users():
     """Notify all users based on their preferences."""
     users = UserManager().get_all_users()
     for user in users:
-        process_and_notify_jobs(user.position, user.location, JobType.from_string(user.job_type), user.email)
+        proxies = get_proxies()
+
+        jobs_df = pd.DataFrame()
+
+        for site in [Site.LINKEDIN, Site.INDEED, Site.GOOGLE]:
+            found_jobs = process_site_jobs(site, user.position, user.location, user.job_type, proxies)
+            jobs_df = pd.concat([jobs_df, found_jobs], ignore_index=True)
+            time.sleep(random.randint(5, 10))
+
+        filtered_jobs = jobs_df[
+            jobs_df['title'].apply(lambda title: validate_job_title(title, user.position))
+        ].copy()
+        is_sent = notify_jobs(user.email, filtered_jobs)
+        if is_sent:
+            logger.info(f"Notification sent to {user.email}.")
+
+
+def get_proxies():
+    proxies = get_valid_proxies(['socks5'], 200, 2)
+    if not proxies:
+        raise Exception("Not enough proxies available.")
+    time.sleep(10)  # Initial delay for proxy availability
+    return proxies
 
 
 if __name__ == "__main__":
@@ -92,4 +99,4 @@ if __name__ == "__main__":
     # Keep the script running
     while True:
         schedule.run_pending()
-        time.sleep(60 * 60)
+        time.sleep(20)
