@@ -17,3 +17,4 @@ class SentEmail(Base):
     user_email = Column(String, primary_key=True)
     job_url = Column(String, primary_key=True)
     position = Column(String, primary_key=True)
+    location = Column(String, primary_key=True)
