@@ -1,6 +1,6 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 
-from db.user_manager import UserManager
+from db.database_service import UserManager
 
 app = Flask(__name__)
 user_manager = UserManager()

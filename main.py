@@ -3,11 +3,10 @@ import time
 
 import pandas as pd
 import schedule
-
 from JobSpy.src.jobspy import Site
 from JobSpy.src.jobspy import scrape_jobs
 from JobSpy.src.jobspy.scrapers.utils import create_logger
-from db.user_manager import UserManager
+from db.database_service import UserManager
 from email_manager import send_email
 from html_render import create_job_card, get_html_template
 from llm import validate_job_title

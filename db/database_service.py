@@ -1,5 +1,5 @@
 from db.database import Session
-from db.models import User
+from db.models import User, SentEmail
 
 
 class UserManager:
@@ -22,3 +22,17 @@ class UserManager:
 
     def get_all_users(self):
         return self.session.query(User).all()
+
+
+class UserEmailManager:
+    def __init__(self):
+        self.session = Session()
+
+    def add_sent_email(self, email, job_url, position):
+        user = SentEmail(email=email, job_url=job_url, position=position)
+        self.session.add(user)
+        self.session.commit()
+
+    def is_sent(self, email, job_url, position):
+        return self.session.query(SentEmail).filter_by(email=email, job_url=job_url, position=position,
+                                                       location=location).count() > 0
