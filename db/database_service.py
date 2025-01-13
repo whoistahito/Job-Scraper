@@ -13,13 +13,14 @@ class UserManager:
             self.session.commit()
 
     def delete_user(self, email, position, location):
-        user = self.session.query(User).filter_by(email=email, position=position, location=location).first()
+        user = self.user_exists(email=email, position=position, location=location)
         if user:
             self.session.delete(user)
             self.session.commit()
 
     def user_exists(self, email, position, location):
-        return self.session.query(User).filter_by(email=email, position=position, location=location).count() > 0
+        return (self.session.query(User)
+                .filter_by(email=email, position=position, location=location).one_or_none())
 
     def get_all_users(self):
         return self.session.query(User).all()
