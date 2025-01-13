@@ -16,7 +16,7 @@ logger = create_logger("main")
 
 
 def find_jobs(site, search_term, location, job_type, prox_list):
-    if job_type == "working student":
+    if job_type == "Werkstudent":
         search_term = search_term + " " + job_type
         job_type = None
     jobs = scrape_jobs(
