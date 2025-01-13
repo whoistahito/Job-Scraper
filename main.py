@@ -78,12 +78,19 @@ def notify_users():
             jobs_df = pd.concat([jobs_df, found_jobs], ignore_index=True)
             time.sleep(random.randint(5, 10))
 
-        filtered_jobs = jobs_df[
-            jobs_df['title'].apply(lambda title: validate_job_title(title, user.position))
-        ].copy()
-        is_sent = notify_jobs(user.email, filtered_jobs)
-        if is_sent:
-            logger.info(f"Notification sent to {user.email}.")
+        if not jobs_df.empty:
+            for _, job in jobs_df.iterrows():
+                if UserEmailManager().is_sent(user.email, job['job_url'], user.position, user.location):
+                    jobs_df.drop(jobs_df[jobs_df['job_url'] == job['job_url']].index, inplace=True)
+
+            filtered_jobs = jobs_df[
+                jobs_df['title'].apply(lambda title: validate_job_title(title, user.position))
+            ].copy()
+
+            send_succeed = notify_jobs(user.email, filtered_jobs)
+            if send_succeed:
+                for _, job in filtered_jobs.iterrows():
+                    UserEmailManager().add_sent_email(user.email, job['job_url'], user.position, user.location)
 
 
 def get_proxies():
