@@ -63,7 +63,13 @@ class Scraper:
         response = await self.get_response(client)
         proxies = await self.handle(response)
         pattern = re.compile(r"\d{1,3}(?:\.\d{1,3}){3}(?::\d{1,5})?")
-        return re.findall(pattern, proxies)
+        prx = re.findall(pattern, proxies)
+        all_prx = []
+        for i in prx:
+            if self.method == "socks":
+                all_prx.append(f"{self.method}5://{i}")
+            all_prx.append(f"{self.method}://{i}")
+        return all_prx
 
 
 # From spys.me
@@ -82,14 +88,11 @@ class SpysMeScraper(Scraper):
 # From proxyscrape.com
 class ProxyScrapeScraper(Scraper):
 
-    def __init__(self, method, timeout=1000, country="All"):
+    def __init__(self, method, timeout=10000, country="All"):
         self.timout = timeout
         self.country = country
         super().__init__(method,
-                         "https://api.proxyscrape.com/?request=getproxies"
-                         "&proxytype={method}"
-                         "&timeout={timout}"
-                         "&country={country}")
+                         "https://api.proxyscrape.com/v2/?request=displayproxies&protocol={method}&timeout={timout}&country={country}&ssl=all&anonymity=All")
 
     def get_url(self, **kwargs):
         return super().get_url(timout=self.timout, country=self.country, **kwargs)
@@ -200,6 +203,17 @@ class GeneralDivScraper(Scraper):
         return "\n".join(proxies)
 
 
+class GitHubScraperNoSlash(Scraper):
+
+    async def handle(self, response):
+        tempproxies = response.text.split("\n")
+        proxies = set()
+        for prxy in tempproxies:
+            proxies.add(prxy)
+
+        return "\n".join(proxies)
+
+
 # For scraping live proxylist from github
 class GitHubScraper(Scraper):
 
@@ -277,6 +291,8 @@ scrapers = [
     GitHubScraper("http", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/http.txt"),
     GitHubScraper("socks4", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/socks4.txt"),
     GitHubScraper("socks5", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/socks5.txt"),
+    GitHubScraperNoSlash("socks5", "https://raw.githubusercontent.com/ProxyScraper/ProxyScraper/main/socks5.txt"),
+    GitHubScraperNoSlash("socks4", "https://raw.githubusercontent.com/ProxyScraper/ProxyScraper/main/socks4.txt"),
 ]
 
 
@@ -308,11 +324,7 @@ def get_valid_proxies(protocols, batch_size, min_valid_size, try_count=0):
     proxies_set = asyncio.run(scrape(protocols))
     all_proxies = list(proxies_set)
     logger.info(f"Total proxies: {len(all_proxies)}")
-    if "socks5" or "socks" in protocols:
-        modified_list = ['socks5://' + address for address in all_proxies]
-        all_proxies = modified_list
     accumulated_valid_proxies = set()
-
     for start_index in range(0, len(all_proxies), batch_size):
         end_index = start_index + batch_size
         current_batch = all_proxies[start_index:end_index]
