@@ -51,13 +51,13 @@ def process_site_jobs(site, search_term, location, job_type, proxies):
     return pd.DataFrame()  # Return an empty DataFrame if all retries fail
 
 
-def notify_jobs(email, filtered_jobs):
+def notify_jobs(filtered_jobs, email, position, location):
     """Process job searches across sites and send notification email."""
     if not filtered_jobs.empty:
         # Filter and render job listings
         filtered_jobs['has_salary'] = filtered_jobs["min_amount"].notna() | filtered_jobs["max_amount"].notna()
         html_content = ''.join(filtered_jobs.apply(create_job_card, axis=1))
-        html_template = get_html_template(html_content)
+        html_template = get_html_template(html_content, email, position, location)
         send_email(html_template, email, is_html=True)
         return True
     else:
@@ -87,7 +87,7 @@ def notify_users():
                 jobs_df['title'].apply(lambda title: validate_job_title(title, user.position))
             ].copy()
 
-            send_succeed = notify_jobs(user.email, filtered_jobs)
+            send_succeed = notify_jobs(filtered_jobs, user.email, user.position, user.location)
             if send_succeed:
                 for _, job in filtered_jobs.iterrows():
                     UserEmailManager().add_sent_email(user.email, job['job_url'], user.position, user.location)
