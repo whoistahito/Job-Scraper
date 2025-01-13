@@ -87,7 +87,7 @@ def notify_users():
 
 
 def get_proxies():
-    proxies = get_valid_proxies(['socks5'], 200, 2)
+    proxies = get_valid_proxies(['socks5', 'socks', 'socks4'], 500, 2)
     if not proxies:
         raise Exception("Not enough proxies available.")
     return proxies
