@@ -62,7 +62,12 @@ def create_job_card(row):
     return html_card
 
 
-def get_html_template(html_content):
+def get_html_template(html_content, email, position, location):
+    unsubscribe_url = "https://example.com"  # Replace with your unsubscribe URL
+    unsubscribe_data = {"email": email,
+                        "position": position,
+                        "location": location}  # Replace with the necessary parameters
+
     html_template = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -86,6 +91,21 @@ def get_html_template(html_content):
         .job-card {{
             border-bottom: 1px solid #e5e7eb;
             padding: 16px 0;
+        }}
+        .unsubscribe-button {{
+            display: inline-block;
+            background-color: #FF4041;
+            color: #ffffff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 20px;
+        }}
+        .unsubscribe-text {{
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 20px;
         }}
     </style>
 </head>
@@ -115,9 +135,34 @@ def get_html_template(html_content):
           <div class="email-container">
             {html_content}
           </div>
+           <p class="unsubscribe-text">Don't want to receive these emails anymore?</p>
+          <button class="unsubscribe-button" onclick="unsubscribe()">Unsubscribe</button>
+
         </td>
       </tr>
     </table>
+
+    <script>
+      function unsubscribe() {{
+          fetch("{unsubscribe_url}", {{
+              method: 'DELETE',
+              headers: {{
+                  'Content-Type': 'application/json'
+              }},
+              body: JSON.stringify({unsubscribe_data})
+          }})
+          .then(response => {{
+              if (response.ok) {{
+                  alert('Successfully unsubscribed.');
+              }} else {{
+                  alert('There was an error. Please try again later.');
+              }}
+          }})
+          .catch(error => {{
+              alert('Network error: ' + error.message);
+          }});
+      }}
+    </script>
 </body>
 </html>
 """
