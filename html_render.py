@@ -16,10 +16,10 @@ greetings = [
 
 def create_job_card(row):
     new_badge = "<span style='display: inline-block; background-color: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 9999px; font-size: 12px; margin-left: 8px;'>New</span>" if \
-    row['new_badge'] else ""
+        row['new_badge'] else ""
 
     salary_info = f"<p style='padding: 0 0 4px 0; font-size: 14px; color: #4b5563;'>💰 {row.get('min_amount', '')} - {row.get('max_amount', '')}</p>" if \
-    row['has_salary'] else ""
+        row['has_salary'] else ""
 
     html_card = f"""
     <table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 20px; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
