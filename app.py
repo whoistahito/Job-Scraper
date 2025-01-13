@@ -13,7 +13,7 @@ def add_user():
     email = data.get('email')
     position = data.get('position')
     location = data.get('location')
-    job_type = data.get('job_type')
+    job_type = data.get('jobType')
     if email is None or position is None or location is None or job_type is None:
         return jsonify({"message": "Invalid request"}), 400
     user_manager.add_user(email, position, location, job_type)
