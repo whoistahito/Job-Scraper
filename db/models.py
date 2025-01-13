@@ -14,7 +14,7 @@ class User(Base):
 
 class SentEmail(Base):
     __tablename__ = 'sent_email'
-    user_email = Column(String, primary_key=True)
+    email = Column(String, primary_key=True)
     job_url = Column(String, primary_key=True)
     position = Column(String, primary_key=True)
     location = Column(String, primary_key=True)
