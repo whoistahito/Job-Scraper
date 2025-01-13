@@ -29,7 +29,7 @@ def delete_user():
     if email is None or position is None or location is None:
         return jsonify({"message": "Invalid request"}), 400
     user_manager.delete_user(email, position, location)
-    return jsonify({"message": "User deleted successfully!"}), 200
+    return redirect('www.google.com')
 
 
 if __name__ == '__main__':
