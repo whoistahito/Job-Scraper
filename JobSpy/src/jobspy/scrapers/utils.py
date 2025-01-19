@@ -42,7 +42,8 @@ class RotatingProxySession:
     @staticmethod
     def format_proxy(proxy):
         """Utility method to format a proxy string into a dictionary."""
-        if not proxy.startswith("http://") and not proxy.startswith("https://") and not proxy.startswith("socks5://"):
+        if not proxy.startswith("http://") and not proxy.startswith("https://") and not proxy.startswith(
+                "socks5://") and not proxy.startswith("socks4://"):
             proxy = f"http://{proxy}"
 
         return {"http": proxy, "https": proxy}
@@ -56,8 +57,8 @@ class RequestsRotating(RotatingProxySession, requests.Session):
         self.clear_cookies = clear_cookies
         self.allow_redirects = True
         self.setup_session(has_retry, delay)
-        # take the first element from cycle
-        self.proxies = next(self.proxy_cycle)
+        if self.proxy_cycle:
+            self.proxies = next(self.proxy_cycle)
 
     def setup_session(self, has_retry, delay):
         if has_retry:

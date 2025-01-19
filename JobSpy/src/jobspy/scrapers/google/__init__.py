@@ -11,8 +11,14 @@ from datetime import datetime, timedelta
 import json
 import math
 import re
+import threading
+import time
 from typing import Tuple
 
+from requests.exceptions import ConnectionError
+from urllib3.exceptions import MaxRetryError, ProxyError
+
+from JobSpy.src.jobspy.scrapers.proxy_scraper import get_socks_proxies
 from .constants import headers_jobs, headers_initial, async_param
 from .. import Scraper, ScraperInput, Site
 from ..utils import (
@@ -39,6 +45,7 @@ class GoogleJobsScraper(Scraper):
         site = Site(Site.GOOGLE)
         super().__init__(site, proxies=proxies, ca_cert=ca_cert)
 
+        self.response = None
         self.country = None
         self.session = None
         self.scraper_input = None
@@ -117,11 +124,12 @@ class GoogleJobsScraper(Scraper):
             query += f" {job_type_mapping[self.scraper_input.job_type]}"
 
         if self.scraper_input.location:
-            query += f" near {self.scraper_input.location}"
+            query += f" in {self.scraper_input.location}"
 
         if self.scraper_input.hours_old:
-            time_filter = get_time_range(self.scraper_input.hours_old)
-            query += f" {time_filter}"
+            pass
+            # time_filter = get_time_range(self.scraper_input.hours_old)
+            # query += f" {time_filter}"
 
         if self.scraper_input.is_remote:
             query += " remote"
@@ -129,8 +137,9 @@ class GoogleJobsScraper(Scraper):
         if self.scraper_input.google_search_term:
             query = self.scraper_input.google_search_term
 
-        params = {"q": query, "udm": "8"}
-        response = self.session.get(self.url, headers=headers_initial, params=params, timeout=10)
+        self.get_response(200, query)
+
+        response = self.response
 
         pattern_fc = r'<div jsname="Yust4d"[^>]+data-async-fc="([^"]+)"'
         match_fc = re.search(pattern_fc, response.text)
@@ -250,3 +259,55 @@ class GoogleJobsScraper(Scraper):
                 logger.error(f"Failed to parse match: {str(e)}")
                 results.append({"raw_match": match.group(0), "error": str(e)})
         return results
+
+    def is_https_working(self, proxy, q):
+        try:
+            params = {"q": q, "udm": "8"}
+            response = create_session(proxies=proxy, is_tls=False, ca_cert=None, has_retry=False, clear_cookies=True,
+                                      delay=1).get(
+                'https://www.google.com/search', headers=headers_initial, timeout=20, params=params)
+            if response.status_code == 200 and len(self._find_job_info_initial_page(response.text)) > 0:
+                self.response = response
+                return True
+        except Exception as e:
+            if isinstance(e.args[0], ProxyError) or isinstance(e.args[0], MaxRetryError) or isinstance(e.args[0],
+                                                                                                       ConnectionError):
+                pass
+            else:
+                logger.error(e)
+            return False
+        return False
+
+    def check(self, proxies, q):
+        logger.info(f"Checking {len(proxies)} proxies")
+
+        def check_proxy(proxy):
+            self.is_https_working(proxy, q)
+
+        threads = []
+        for p_ in proxies:
+            t = threading.Thread(target=check_proxy, args=(p_,))
+            threads.append(t)
+
+        for t in threads:
+            t.start()
+
+        for t in threads:
+            t.join()
+
+    def get_response(self, batch_size, q, try_count=0):
+        all_proxies = get_socks_proxies()
+        logger.info(len(all_proxies))
+        for start_index in range(0, len(all_proxies), batch_size):
+            end_index = start_index + batch_size
+            current_batch = all_proxies[start_index:end_index]
+
+            self.check(current_batch, q)
+
+            if self.response is not None:
+                return
+        if try_count >= 5:
+            return None
+        time.sleep(60 * 10)
+        try_count += 1
+        get_valid_proxies(protocols, batch_size, q, try_count)

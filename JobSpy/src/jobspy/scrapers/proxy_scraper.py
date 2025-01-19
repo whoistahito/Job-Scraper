@@ -1,17 +1,10 @@
 import asyncio
 import base64
 import re
-import threading
-import time
 
 from bs4 import BeautifulSoup
 import httpx
-
-from JobSpy.src.jobspy.scrapers.google import GoogleJobsScraper
-from JobSpy.src.jobspy.scrapers.utils import create_logger
-from JobSpy.src.jobspy.scrapers.utils import (
-    create_session,
-)
+from .utils import create_logger
 
 logger = create_logger("proxy_scraper")
 
@@ -227,41 +220,6 @@ class GitHubScraper(Scraper):
         return "\n".join(proxies)
 
 
-def is_https_working(proxy):
-    try:
-        params = {"q": "jobs in Texas USA", "udm": "8"}
-        response = create_session(proxies=proxy, is_tls=False, ca_cert=None, has_retry=False, clear_cookies=True,
-                                  delay=1).get(
-            'https://www.google.com/search', headers=headers_initial, timeout=20, params=params)
-        if response.status_code == 200 and len(GoogleJobsScraper._find_job_info_initial_page(response.text)) > 0:
-            return True
-    except Exception as e:
-        return False
-    return False
-
-
-def check(proxies):
-    logger.info(f"Checking {len(proxies)} proxies")
-    valid_proxies = []
-
-    def check_proxy(proxy):
-        valid = is_https_working(proxy)
-        valid_proxies.extend([proxy] if valid else [])
-
-    threads = []
-    for p_ in proxies:
-        t = threading.Thread(target=check_proxy, args=(p_,))
-        threads.append(t)
-
-    for t in threads:
-        t.start()
-
-    for t in threads:
-        t.join()
-
-    return valid_proxies
-
-
 scrapers = [
     SpysMeScraper("http"),
     SpysMeScraper("socks"),
@@ -286,7 +244,7 @@ scrapers = [
     GitHubScraper("https",
                   "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/protocols/https/data.txt"),
     GitHubScraper("http", "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/all.txt"),
-    GitHubScraper("socks", "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/all.txt"),
+    GitHubScraper("socks5", "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/all.txt"),
     GitHubScraper("https", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/https.txt"),
     GitHubScraper("http", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/http.txt"),
     GitHubScraper("socks4", "https://raw.githubusercontent.com/zloi-user/hideip.me/main/socks4.txt"),
@@ -320,26 +278,9 @@ async def scrape(methods):
     return set(proxies)
 
 
-def get_valid_proxies(protocols, batch_size, min_valid_size, try_count=0):
-    proxies_set = asyncio.run(scrape(protocols))
-    all_proxies = list(proxies_set)
-    logger.info(f"Total proxies: {len(all_proxies)}")
-    accumulated_valid_proxies = set()
-    for start_index in range(0, len(all_proxies), batch_size):
-        end_index = start_index + batch_size
-        current_batch = all_proxies[start_index:end_index]
-
-        valid_proxies = check(current_batch)
-        accumulated_valid_proxies.update(valid_proxies)
-        logger.info(f"Total valid proxies: {len(accumulated_valid_proxies)}")
-
-        if len(accumulated_valid_proxies) >= min_valid_size:
-            return list(accumulated_valid_proxies)
-    if try_count >= 5:
-        return []
-    time.sleep(60 * 10)
-    try_count += 1
-    get_valid_proxies(protocols, batch_size, min_valid_size, try_count)
+def get_socks_proxies():
+    proxies_set = asyncio.run(scrape([ "socks5", "socks4"]))
+    return list(proxies_set)
 
 
 async def test_scraper():

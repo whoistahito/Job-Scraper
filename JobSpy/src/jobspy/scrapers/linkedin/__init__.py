@@ -7,21 +7,31 @@ This module contains routines to scrape LinkedIn.
 
 from __future__ import annotations
 
-import math
-import time
-import random
-import regex as re
-from typing import Optional
 from datetime import datetime
-
-from bs4.element import Tag
-from bs4 import BeautifulSoup
+import math
+import random
+import threading
+import time
+from typing import Optional
 from urllib.parse import urlparse, urlunparse, unquote
 
+from bs4 import BeautifulSoup
+from bs4.element import Tag
+import regex as re
+from requests.exceptions import ConnectionError
+from urllib3.exceptions import MaxRetryError, ProxyError
+
+from JobSpy.src.jobspy.scrapers.proxy_scraper import get_socks_proxies
 from .constants import headers
 from .. import Scraper, ScraperInput, Site
 from ..exceptions import LinkedInException
 from ..utils import create_session, remove_attributes, create_logger
+from ..utils import (
+    extract_emails_from_text,
+    get_enum_from_job_type,
+    currency_parser,
+    markdown_converter,
+)
 from ...jobs import (
     JobPost,
     Location,
@@ -30,12 +40,6 @@ from ...jobs import (
     Country,
     Compensation,
     DescriptionFormat,
-)
-from ..utils import (
-    extract_emails_from_text,
-    get_enum_from_job_type,
-    currency_parser,
-    markdown_converter,
 )
 
 logger = create_logger("LinkedIn")
@@ -62,6 +66,7 @@ class LinkedInScraper(Scraper):
             delay=5,
             clear_cookies=True,
         )
+        self.response = None
         self.session.headers.update(headers)
         self.scraper_input = None
         self.country = "worldwide"
@@ -112,35 +117,10 @@ class LinkedInScraper(Scraper):
                 params["f_TPR"] = f"r{seconds_old}"
 
             params = {k: v for k, v in params.items() if v is not None}
-            try:
-                response = self.session.get(
-                    f"{self.base_url}/jobs-guest/jobs/api/seeMoreJobPostings/search?",
-                    params=params,
-                    timeout=10,
-                )
-                if response.status_code not in range(200, 400):
-                    if response.status_code == 429:
-                        err = (
-                            f"429 Response - Blocked by LinkedIn for too many requests"
-                        )
-                    else:
-                        err = f"LinkedIn response status code {response.status_code}"
-                        err += f" - {response.text}"
-                    logger.error(err)
-                    return JobResponse(jobs=job_list)
-            except Exception as e:
-                if "Proxy responded with" in str(e):
-                    logger.error(f"LinkedIn: Bad proxy")
-                else:
-                    logger.error(f"LinkedIn: {str(e)}")
-                return JobResponse(jobs=job_list)
 
-            soup = BeautifulSoup(response.text, "html.parser")
-            job_cards = soup.find_all("div", class_="base-search-card")
-            if len(job_cards) == 0:
-                return JobResponse(jobs=job_list)
+            self.get_response(100, params)
 
-            for job_card in job_cards:
+            for job_card in self.response:
                 href_tag = job_card.find("a", class_="base-card__full-link")
                 if href_tag and "href" in href_tag.attrs:
                     href = href_tag.attrs["href"].split("?")[0]
@@ -413,3 +393,67 @@ class LinkedInScraper(Scraper):
             JobType.CONTRACT: "C",
             JobType.TEMPORARY: "T",
         }.get(job_type_enum, "")
+
+    def is_https_working(self, proxy, params):
+        try:
+            response = create_session(proxies=proxy, is_tls=False, ca_cert=None, has_retry=False, clear_cookies=True,
+                                      delay=1).get(
+                f"{self.base_url}/jobs-guest/jobs/api/seeMoreJobPostings/search?",
+                params=params,
+                timeout=10)
+            if response.status_code not in range(200, 400):
+                if response.status_code == 429:
+                    err = (
+                        f"429 Response - Blocked by LinkedIn for too many requests"
+                    )
+                else:
+                    err = f"LinkedIn response status code {response.status_code}"
+                    err += f" - {response.text}"
+                logger.error(err)
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            job_cards = soup.find_all("div", class_="base-search-card")
+            if len(job_cards) != 0:
+                self.response = job_cards
+                return True
+        except Exception as e:
+            if isinstance(e.args[0], ProxyError) or isinstance(e.args[0], MaxRetryError) or isinstance(e.args[0],
+                                                                                                       ConnectionError):
+                pass
+            else:
+                logger.error(e)
+            return False
+        return False
+
+    def check(self, proxies, q):
+        logger.info(f"Checking {len(proxies)} proxies")
+
+        def check_proxy(proxy):
+            self.is_https_working(proxy, q)
+
+        threads = []
+        for p_ in proxies:
+            t = threading.Thread(target=check_proxy, args=(p_,))
+            threads.append(t)
+
+        for t in threads:
+            t.start()
+
+        for t in threads:
+            t.join()
+
+    def get_response(self, batch_size, q, try_count=0):
+        all_proxies = get_socks_proxies()
+        for start_index in range(0, len(all_proxies), batch_size):
+            end_index = start_index + batch_size
+            current_batch = all_proxies[start_index:end_index]
+
+            self.check(current_batch, q)
+
+            if self.response is not None:
+                return
+        if try_count >= 5:
+            return None
+        time.sleep(60 * 10)
+        try_count += 1
+        get_valid_proxies(protocols, batch_size, q, try_count)
