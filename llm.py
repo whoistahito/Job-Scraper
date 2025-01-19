@@ -12,6 +12,7 @@ def validate_job_title(job_title, search_term, try_count=1):
     cred = Credential()
     genai.configure(api_key=cred.get_google_api())
     model = genai.GenerativeModel("gemini-1.5-flash")
+    time.sleep(5)
     response = model.generate_content(f"""
     Below are some examples showing a question, job title, search term, and answer format:
     
@@ -31,7 +32,6 @@ def validate_job_title(job_title, search_term, try_count=1):
     Search term: {search_term} , 
     Answer: 
     """)
-    time.sleep(4)
     res = response.text.strip().lower()  # Remove whitespace and make lowercase
     if res == "yes":
         return True
