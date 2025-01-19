@@ -9,7 +9,6 @@ user_manager = UserManager()
 @app.route('/user', methods=['POST'])
 def add_user():
     data = request.json
-    print(data)
     email = data.get('email')
     position = data.get('position')
     location = data.get('location')
