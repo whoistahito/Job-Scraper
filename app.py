@@ -13,10 +13,14 @@ def add_user():
     position = data.get('position')
     location = data.get('location')
     job_type = data.get('jobType')
-    if email is None or position is None or location is None or job_type is None:
-        return jsonify({"message": "Invalid request"}), 400
-    user_manager.add_user(email, position, location, job_type)
-    return jsonify({"message": "User added successfully!"}), 201
+    try:
+        if email is None or position is None or location is None or job_type is None:
+            return jsonify({"message": "Invalid request"}), 400
+        user_manager.add_user(email, position, location, job_type)
+        return jsonify({"message": "User added successfully!"}), 201
+    except Exception as e:
+        redirect('https://yourjobfinder.website/unsubscribeError')
+
 
 
 @app.route('/user', methods=['DELETE'])
@@ -25,10 +29,13 @@ def delete_user():
     email = data.get('email')
     position = data.get('position')
     location = data.get('location')
-    if email is None or position is None or location is None:
-        return jsonify({"message": "Invalid request"}), 400
-    user_manager.delete_user(email, position, location)
-    return redirect('www.google.com')
+    try:
+        if email is None or position is None or location is None:
+            raise Exception
+        user_manager.delete_user(email, position, location)
+        return redirect('https://yourjobfinder.website/unsubscribe')
+    except Exception:
+        redirect('https://yourjobfinder.website/unsubscribeError')
 
 
 if __name__ == '__main__':
