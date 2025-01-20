@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify, redirect
 
 from db.database_service import UserManager
+from flask_cors import CORS
+
 
 app = Flask(__name__)
 user_manager = UserManager()
-
+cors = CORS(app, resources={r"/user": {"origins": "https://yourjobfinder.website"}})
 
 @app.route('/user', methods=['POST'])
 def add_user():
