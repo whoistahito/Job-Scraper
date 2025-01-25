@@ -61,6 +61,9 @@ class IndeedScraper(Scraper):
         :return: job_response
         """
         self.scraper_input = scraper_input
+        if self.scraper_input.job_type == JobType.WORKING_STUDENT:
+            self.scraper_input.job_type = None
+            self.scraper_input.search_term = self.scraper_input.search_term + " Werkstudent"
         domain, self.api_country_code = self.scraper_input.country.indeed_domain_value
         self.base_url = f"https://{domain}.indeed.com"
         self.headers = api_headers.copy()
@@ -82,9 +85,9 @@ class IndeedScraper(Scraper):
             page += 1
         return JobResponse(
             jobs=job_list[
-                scraper_input.offset : scraper_input.offset
-                + scraper_input.results_wanted
-            ]
+                 scraper_input.offset: scraper_input.offset
+                                       + scraper_input.results_wanted
+                 ]
         )
 
     def _scrape_page(self, cursor: str | None) -> Tuple[list[JobPost], str | None]:
@@ -167,16 +170,10 @@ class IndeedScraper(Scraper):
             }
             """
         elif self.scraper_input.job_type or self.scraper_input.is_remote:
-            job_type_key_mapping = {
-                JobType.FULL_TIME: "CF3CP",
-                JobType.PART_TIME: "75GKK",
-                JobType.CONTRACT: "NJXCK",
-                JobType.INTERNSHIP: "VDTG7",
-            }
 
             keys = []
             if self.scraper_input.job_type:
-                key = job_type_key_mapping[self.scraper_input.job_type]
+                key = self.job_type_code(self.scraper_input.job_type)
                 keys.append(key)
 
             if self.scraper_input.is_remote:
@@ -347,3 +344,12 @@ class IndeedScraper(Scraper):
             return CompensationInterval[mapped_interval]
         else:
             raise ValueError(f"Unsupported interval: {interval}")
+
+    @staticmethod
+    def job_type_code(job_type_enum: JobType) -> str:
+        return {
+            JobType.FULL_TIME: "CF3CP",
+            JobType.PART_TIME: "75GKK",
+            JobType.CONTRACT: "NJXCK",
+            JobType.INTERNSHIP: "VDTG7",
+        }.get(job_type_enum, "")
