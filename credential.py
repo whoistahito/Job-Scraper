@@ -36,7 +36,7 @@ class Credential:
 
     @staticmethod
     def get_db_uri():
-        return os.environ.get("DATABASE_URL", "postgresql://%s:%s@%s:%s/%s" % (
+        return os.environ.get("db_url", "postgresql://%s:%s@%s:%s/%s" % (
             Credential.get_db_username(),
             Credential.get_db_password(),
             Credential.get_db_host(),
