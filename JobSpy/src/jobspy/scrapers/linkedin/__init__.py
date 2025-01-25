@@ -7,10 +7,10 @@ This module contains routines to scrape LinkedIn.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 import math
 import random
-import threading
 import time
 from typing import Optional
 from urllib.parse import urlparse, urlunparse, unquote
@@ -86,6 +86,10 @@ class LinkedInScraper(Scraper):
         seconds_old = (
             scraper_input.hours_old * 3600 if scraper_input.hours_old else None
         )
+        if scraper_input.job_type == JobType.WORKING_STUDENT:
+            scraper_input.job_type = None
+            scraper_input.search_term += " Werkstudent"
+
         continue_search = (
             lambda: len(job_list) < scraper_input.results_wanted and start < 1000
         )
@@ -118,9 +122,10 @@ class LinkedInScraper(Scraper):
 
             params = {k: v for k, v in params.items() if v is not None}
 
-            self.get_response(100, params)
-
-            for job_card in self.response:
+            res = self.get_response(100, params)
+            if not res:
+                break
+            for job_card in res:
                 href_tag = job_card.find("a", class_="base-card__full-link")
                 if href_tag and "href" in href_tag.attrs:
                     href = href_tag.attrs["href"].split("?")[0]
@@ -410,50 +415,63 @@ class LinkedInScraper(Scraper):
                     err = f"LinkedIn response status code {response.status_code}"
                     err += f" - {response.text}"
                 logger.error(err)
+                return None
 
             soup = BeautifulSoup(response.text, "html.parser")
             job_cards = soup.find_all("div", class_="base-search-card")
             if len(job_cards) != 0:
-                self.response = job_cards
-                return True
+                return job_cards
         except Exception as e:
-            if isinstance(e.args[0], ProxyError) or isinstance(e.args[0], MaxRetryError) or isinstance(e.args[0],
-                                                                                                       ConnectionError):
+            if isinstance(e, (ProxyError, MaxRetryError, ConnectionError)):
                 pass
             else:
                 logger.error(e)
-            return False
-        return False
+        return None
 
     def check(self, proxies, q):
         logger.info(f"Checking {len(proxies)} proxies")
+        with ThreadPoolExecutor(max_workers=len(proxies)) as executor:
+            futures = {executor.submit(self.is_https_working, proxy, q): proxy for proxy in proxies}
+            for future in as_completed(futures):
+                try:
+                    job_cards = future.result()
+                    if job_cards is not None:
+                        return job_cards
+                except Exception as exc:
+                    proxy = futures[future]
+                    logger.error(f'Proxy {proxy} generated an exception: {exc}')
+        return None
 
-        def check_proxy(proxy):
-            self.is_https_working(proxy, q)
-
-        threads = []
-        for p_ in proxies:
-            t = threading.Thread(target=check_proxy, args=(p_,))
-            threads.append(t)
-
-        for t in threads:
-            t.start()
-
-        for t in threads:
-            t.join()
-
-    def get_response(self, batch_size, q, try_count=0):
+    def get_response(self, batch_size, q, try_count=0, empty_counter=0, empty_threshold=3):
         all_proxies = get_socks_proxies()
+
         for start_index in range(0, len(all_proxies), batch_size):
             end_index = start_index + batch_size
             current_batch = all_proxies[start_index:end_index]
 
-            self.check(current_batch, q)
+            try:
+                result = self.check(current_batch, q)
 
-            if self.response is not None:
-                return
-        if try_count >= 5:
-            return None
-        time.sleep(60 * 10)
-        try_count += 1
-        get_valid_proxies(protocols, batch_size, q, try_count)
+                if result:
+                    # Reset the empty counter if we get valid job cards
+                    empty_counter = 0
+                    return result
+
+                if not result:
+                    soup = BeautifulSoup("", "html.parser")  # Would actually parse the response content
+                    if soup.get_text(strip=True) == "":
+                        empty_counter += 1
+                        logger.warning(f"Empty response received {empty_counter} times")
+
+            except Exception as e:
+                logger.error(f"An error occurred: {e}")
+
+            if empty_counter >= empty_threshold:
+                logger.error(f"Received empty responses consistently for {q['keywords']} . Stopping retry attempts.")
+                return None
+
+        if try_count < 5:
+            time.sleep(60 * 10)
+            return self.get_response(batch_size, q, try_count + 1, empty_counter)
+
+        return None
