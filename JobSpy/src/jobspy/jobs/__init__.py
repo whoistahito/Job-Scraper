@@ -10,6 +10,7 @@ from pydantic import BaseModel
 class JobType(Enum):
     FULL_TIME = (
         "fulltime",
+        "full-time",
         "períodointegral",
         "estágio/trainee",
         "cunormăîntreagă",
@@ -39,7 +40,7 @@ class JobType(Enum):
         "повназайнятість",
         "toànthờigian",
     )
-    PART_TIME = ("parttime", "teilzeit", "částečnýúvazek", "deltid")
+    PART_TIME = ("parttime", "teilzeit", "částečnýúvazek", "deltid", "part-time")
     CONTRACT = ("contract", "contractor")
     TEMPORARY = ("temporary",)
     INTERNSHIP = (
@@ -55,14 +56,8 @@ class JobType(Enum):
     OTHER = ("other",)
     SUMMER = ("summer",)
     VOLUNTEER = ("volunteer",)
-
-    @staticmethod
-    def from_string(job_string):
-        job_string = job_string.lower()
-        for job_type in JobType:
-            if job_string in job_type.value:
-                return job_type.value[0]
-        return None
+    WORKING_STUDENT = ("working-student", "workingstudent", "werkstudent", "student",
+    "studentjob", "studentenjob", "working student",)
 
 
 class Country(Enum):

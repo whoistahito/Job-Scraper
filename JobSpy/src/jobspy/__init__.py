@@ -19,7 +19,7 @@ from .scrapers.glassdoor import GlassdoorScraper
 from .scrapers.google import GoogleJobsScraper
 from .scrapers.indeed import IndeedScraper
 from .scrapers.linkedin import LinkedInScraper
-from .scrapers.utils import set_logger_level, extract_salary, create_logger
+from .scrapers.utils import set_logger_level, extract_salary, create_logger,get_enum_from_job_type
 from .scrapers.ziprecruiter import ZipRecruiterScraper
 
 
@@ -62,13 +62,8 @@ def scrape_jobs(
     def map_str_to_site(site_name: str) -> Site:
         return Site[site_name.upper()]
 
-    def get_enum_from_value(value_str):
-        for job_type in JobType:
-            if value_str in job_type.value:
-                return job_type
-        raise Exception(f"Invalid job type: {value_str}")
 
-    job_type = get_enum_from_value(job_type) if job_type else None
+    job_type = get_enum_from_job_type(job_type)
 
     def get_site_type():
         site_types = list(Site)
