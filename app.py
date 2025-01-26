@@ -1,11 +1,16 @@
 from flask import Flask, request, jsonify, redirect
-
-from db.database_service import UserManager
 from flask_cors import CORS
 
+from db.database_service import UserManager
+from extension import db, migrate
+from credential import Credential
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = Credential().get_db_uri()
+db.init_app(app)
+migrate.init_app(app, db)
 user_manager = UserManager()
+# TODO: Add www to list
 cors = CORS(app, resources={r"/user": {"origins": "https://yourjobfinder.website"}})
 
 @app.route('/user', methods=['POST'])

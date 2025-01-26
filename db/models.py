@@ -1,20 +1,17 @@
-from sqlalchemy import Column, String
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
+from extension import db
 
 
-class User(Base):
+class User(db.Model):
     __tablename__ = 'users'
-    email = Column(String, primary_key=True)
-    position = Column(String, primary_key=True)
-    location = Column(String, primary_key=True)
-    job_type = Column(String, nullable=False)
+    email = db.Column(db.String, primary_key=True)
+    position = db.Column(db.String, primary_key=True)
+    location = db.Column(db.String, primary_key=True)
+    job_type = db.Column(db.String, nullable=False)
 
 
-class SentEmail(Base):
+class SentEmail(db.Model):
     __tablename__ = 'sent_email'
-    email = Column(String, primary_key=True)
-    job_url = Column(String, primary_key=True)
-    position = Column(String, primary_key=True)
-    location = Column(String, primary_key=True)
+    email = db.Column(db.String, primary_key=True)
+    job_url = db.Column(db.String, primary_key=True)
+    position = db.Column(db.String, primary_key=True)
+    location = db.Column(db.String, primary_key=True)
