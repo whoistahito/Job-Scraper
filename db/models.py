@@ -7,6 +7,7 @@ class User(db.Model):
     position = db.Column(db.String, primary_key=True)
     location = db.Column(db.String, primary_key=True)
     job_type = db.Column(db.String, nullable=False)
+    is_new = db.Column(db.Boolean, nullable=False, default=True)
 
 
 class SentEmail(db.Model):

@@ -83,6 +83,15 @@ def notify_jobs(filtered_jobs: pd.DataFrame, email: str, position: str, location
     logger.error("No jobs found based on the criteria.")
     return False
 
+def check_for_new_users():
+    """
+    Check for new users and send them a welcome email.
+    """
+    with app.app_context():
+        new_users = UserManager().get_new_users()
+        for user in new_users:
+            notify_user(user)
+            UserManager().mark_user_as_not_new(user.email)
 
 def notify_users() -> None:
     """
@@ -92,29 +101,31 @@ def notify_users() -> None:
     with app.app_context():
         users = UserManager().get_all_users()
         for user in users:
-            jobs_df = pd.DataFrame()
+            notify_user(user)
 
-            for site in [Site.LINKEDIN, Site.INDEED, Site.GOOGLE]:
-                found_jobs = try_find_jobs(site, user.position, user.location, user.job_type)
-                jobs_df = pd.concat([jobs_df, found_jobs], ignore_index=True)
-                time.sleep(random.uniform(10, 20))
 
-            if not jobs_df.empty:
-                # Remove already sent jobs
-                jobs_df = jobs_df[
-                    ~jobs_df['job_url'].apply(lambda url:
-                                              UserEmailManager().is_sent(user.email, url, user.position, user.location)
-                                              )
-                ]
+def notify_user(user):
+    jobs_df = pd.DataFrame()
+    for site in [Site.LINKEDIN, Site.INDEED, Site.GOOGLE]:
+        found_jobs = try_find_jobs(site, user.position, user.location, user.job_type)
+        jobs_df = pd.concat([jobs_df, found_jobs], ignore_index=True)
+        time.sleep(random.uniform(10, 20))
+    if not jobs_df.empty:
+        # Remove already sent jobs
+        jobs_df = jobs_df[
+            ~jobs_df['job_url'].apply(lambda url:
+                                      UserEmailManager().is_sent(user.email, url, user.position, user.location)
+                                      )
+        ]
 
-                filtered_jobs = jobs_df[
-                    jobs_df['title'].apply(lambda title: validate_job_title(title, user.position))
-                ].copy()
+        filtered_jobs = jobs_df[
+            jobs_df['title'].apply(lambda title: validate_job_title(title, user.position))
+        ].copy()
 
-                if notify_jobs(filtered_jobs, user.email, user.position, user.location):
-                    filtered_jobs.apply(
-                        lambda row: UserEmailManager().add_sent_email(
-                            user.email, row['job_url'], user.position, user.location), axis=1)
+        if notify_jobs(filtered_jobs, user.email, user.position, user.location):
+            filtered_jobs.apply(
+                lambda row: UserEmailManager().add_sent_email(
+                    user.email, row['job_url'], user.position, user.location), axis=1)
 
 
 if __name__ == "__main__":
@@ -122,5 +133,6 @@ if __name__ == "__main__":
         lambda: notify_users())
 
     while True:
+        check_for_new_users()
         schedule.run_pending()
         time.sleep(20)

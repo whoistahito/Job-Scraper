@@ -19,6 +19,15 @@ class UserManager:
         return (User.query
                 .filter_by(email=email, position=position, location=location).one_or_none())
 
+    def get_new_users(self):
+        return User.query.filter_by(is_new=True).all()
+
+    def mark_user_as_not_new(self, email):
+        user = User.query.filter_by(email=email).one_or_none()
+        if user:
+            user.is_new = False
+            db.session.commit()
+
     def get_all_users(self):
         return User.query.all()
 
