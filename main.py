@@ -134,5 +134,6 @@ if __name__ == "__main__":
 
     while True:
         check_for_new_users()
+
         schedule.run_pending()
         time.sleep(20)
