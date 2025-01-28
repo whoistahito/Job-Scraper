@@ -39,6 +39,6 @@ def validate_job_title(job_title, search_term, try_count=1):
         return False
     else:
         if try_count == 4:
-            logger.error("Could not validate job title")
+            logger.error(f"Could not validate job title for {job_title} with response {res}")
             return False
         return validate_job_title(job_title, search_term, try_count + 1)
