@@ -93,7 +93,7 @@ def check_for_new_users():
         for user in new_users:
             send_email(get_welcome_message(), "Welcome to Your Job Finder!", user.email, is_html=True)
             notify_user(user)
-            UserManager().mark_user_as_not_new(user.email)
+            UserManager().mark_user_as_not_new(user.email,user.position,user.location)
 
 
 def notify_users() -> None:
