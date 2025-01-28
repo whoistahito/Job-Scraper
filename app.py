@@ -11,7 +11,7 @@ db.init_app(app)
 migrate.init_app(app, db)
 user_manager = UserManager()
 # TODO: Add www to list
-cors = CORS(app, resources={r"/user": {"origins": "https://yourjobfinder.website"}})
+cors = CORS(app)
 
 @app.route('/user', methods=['POST'])
 def add_user():
@@ -26,7 +26,8 @@ def add_user():
         user_manager.add_user(email, position, location, job_type)
         return jsonify({"message": "User added successfully!"}), 201
     except Exception as e:
-        redirect('https://yourjobfinder.website/unsubscribeError')
+        print(e)
+        return jsonify({"message": e}), 500
 
 
 
@@ -40,9 +41,10 @@ def delete_user():
         if email is None or position is None or location is None:
             raise Exception
         user_manager.delete_user(email, position, location)
-        return redirect('https://yourjobfinder.website/unsubscribe')
-    except Exception:
-        redirect('https://yourjobfinder.website/unsubscribeError')
+        return jsonify({"message": "User added successfully!"}), 201
+    except Exception as e:
+        print(e)
+        return jsonify({"message": e}), 500
 
 
 if __name__ == '__main__':
