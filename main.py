@@ -10,7 +10,7 @@ from JobSpy.src.jobspy import scrape_jobs
 from JobSpy.src.jobspy.scrapers.utils import create_logger
 from db.database_service import UserManager, UserEmailManager
 from email_manager import send_email
-from html_render import create_job_card, get_html_template
+from html_render import create_job_card, get_html_template,get_welcome_message
 from llm import validate_job_title
 
 logger = create_logger("main")
@@ -91,6 +91,7 @@ def check_for_new_users():
     with app.app_context():
         new_users = UserManager().get_new_users()
         for user in new_users:
+            send_email(get_welcome_message(), "Welcome to Your Job Finder!", user.email, is_html=True)
             notify_user(user)
             UserManager().mark_user_as_not_new(user.email)
 
