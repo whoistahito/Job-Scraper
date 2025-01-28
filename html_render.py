@@ -82,10 +82,10 @@ Find your next job easily with our app. We search the internet based on what you
                           <table border="0" cellpadding="0" cellspacing="0">
                             <tr>
                               <td width="20" style="padding-right: 12px;">
-                                <span style="font-size: 20px; line-height: 1;">🏢</span>
+                                <span style="font-size: 20px; line-height: 1;">⭐</span>
                               </td>
                               <td style="font-family: Arial, sans-serif; font-size: 14px; color: #374151;">
-                                Industry Preferences
+                                Job type Preferences
                               </td>
                             </tr>
                           </table>
@@ -100,18 +100,6 @@ Find your next job easily with our app. We search the internet based on what you
                               </td>
                               <td style="font-family: Arial, sans-serif; font-size: 14px; color: #374151;">
                                 Location Requirements
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                        <td width="50%" style="padding: 0 0 16px 12px;">
-                          <table border="0" cellpadding="0" cellspacing="0">
-                            <tr>
-                              <td width="20" style="padding-right: 12px;">
-                                <span style="font-size: 20px; line-height: 1;">⭐</span>
-                              </td>
-                              <td style="font-family: Arial, sans-serif; font-size: 14px; color: #374151;">
-                                Experience Level
                               </td>
                             </tr>
                           </table>
