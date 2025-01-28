@@ -7,6 +7,7 @@ This module contains routines to scrape Google.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 import json
 import math
@@ -137,9 +138,10 @@ class GoogleJobsScraper(Scraper):
         if self.scraper_input.google_search_term:
             query = self.scraper_input.google_search_term
 
-        self.get_response(200, query)
+        response = self.get_response(200, query)
 
-        response = self.response
+        if response is None:
+            raise Exception(f"Failed to scrape google for {self.scraper_input.search_term}")
 
         pattern_fc = r'<div jsname="Yust4d"[^>]+data-async-fc="([^"]+)"'
         match_fc = re.search(pattern_fc, response.text)
@@ -266,48 +268,56 @@ class GoogleJobsScraper(Scraper):
             response = create_session(proxies=proxy, is_tls=False, ca_cert=None, has_retry=False, clear_cookies=True,
                                       delay=1).get(
                 'https://www.google.com/search', headers=headers_initial, timeout=20, params=params)
-            if response.status_code == 200 and len(self._find_job_info_initial_page(response.text)) > 0:
-                self.response = response
-                return True
+            if response.status_code == 200:
+                return response
         except Exception as e:
-            if isinstance(e.args[0], ProxyError) or isinstance(e.args[0], MaxRetryError) or isinstance(e.args[0],
-                                                                                                       ConnectionError):
+            if isinstance(e, (ProxyError, MaxRetryError, ConnectionError)):
                 pass
             else:
                 logger.error(e)
-            return False
-        return False
+        return None
 
     def check(self, proxies, q):
         logger.info(f"Checking {len(proxies)} proxies")
+        with ThreadPoolExecutor(max_workers=len(proxies)) as executor:
+            futures = {executor.submit(self.is_https_working, proxy, q): proxy for proxy in proxies}
+            for future in as_completed(futures):
+                try:
+                    job_cards = future.result()
+                    if job_cards is not None:
+                        return job_cards
+                except Exception as exc:
+                    proxy = futures[future]
+                    logger.error(f'Proxy {proxy} generated an exception: {exc}')
+        return None
 
-        def check_proxy(proxy):
-            self.is_https_working(proxy, q)
-
-        threads = []
-        for p_ in proxies:
-            t = threading.Thread(target=check_proxy, args=(p_,))
-            threads.append(t)
-
-        for t in threads:
-            t.start()
-
-        for t in threads:
-            t.join()
-
-    def get_response(self, batch_size, q, try_count=0):
+    def get_response(self, batch_size, q, try_count=0,empty_counter=0, empty_threshold=6):
         all_proxies = get_socks_proxies()
-        logger.info(len(all_proxies))
+
         for start_index in range(0, len(all_proxies), batch_size):
             end_index = start_index + batch_size
             current_batch = all_proxies[start_index:end_index]
 
-            self.check(current_batch, q)
+            try:
+                result = self.check(current_batch, q)
 
-            if self.response is not None:
-                return
-        if try_count >= 5:
-            return None
-        time.sleep(60 * 10)
-        try_count += 1
-        get_valid_proxies(protocols, batch_size, q, try_count)
+                if result:
+                    if len(self._find_job_info_initial_page(result.text)) > 0:
+                        empty_counter = 0
+                        return result
+
+                empty_counter += 1
+                logger.warning(f"Empty response received {empty_counter} times")
+
+            except Exception as e:
+                logger.error(f"An error occurred: {e}")
+
+            if empty_counter >= empty_threshold:
+                logger.error(f"Received empty responses consistently for {q} . Stopping retry attempts.")
+                return None
+
+        if try_count < 2:
+            time.sleep(60 * 10)
+            return self.get_response(batch_size, q, try_count + 1, empty_counter)
+
+        return None
