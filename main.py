@@ -133,7 +133,7 @@ if __name__ == "__main__":
         lambda: notify_users())
 
     while True:
-        # check_for_new_users()
+        check_for_new_users()
 
         schedule.run_pending()
         time.sleep(20)
