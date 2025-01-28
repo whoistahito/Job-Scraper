@@ -46,6 +46,12 @@ def delete_user():
         print(e)
         return jsonify({"message": e}), 500
 
+@app.route('/', methods=['GET'])
+def index():
+    return redirect("https://yourjobfinder.website")
+
+
+
 
 if __name__ == '__main__':
     app.run(threaded=True, port=5000)
