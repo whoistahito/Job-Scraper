@@ -63,10 +63,7 @@ def create_job_card(row):
 
 
 def get_html_template(html_content, email, position, location):
-    unsubscribe_url = "https://example.com"  # Replace with your unsubscribe URL
-    unsubscribe_data = {"email": email,
-                        "position": position,
-                        "location": location}  # Replace with the necessary parameters
+    unsubscribe_url = "https://yourjobfinder.website/unsubscribe/process"  # Replace with your unsubscribe URL
 
     html_template = f"""
 <!DOCTYPE html>
@@ -144,22 +141,20 @@ def get_html_template(html_content, email, position, location):
 
     <script>
       function unsubscribe() {{
-          fetch("{unsubscribe_url}", {{
-              method: 'DELETE',
+          fetch("{unsubscribe_url}?email={email}&position={position}&location={location}", {{
+              method: 'GET',
               headers: {{
                   'Content-Type': 'application/json'
-              }},
-              body: JSON.stringify({unsubscribe_data})
+              }}
           }})
           .then(response => {{
               if (response.ok) {{
-                  alert('Successfully unsubscribed.');
               }} else {{
                   alert('There was an error. Please try again later.');
               }}
           }})
           .catch(error => {{
-              alert('Network error: ' + error.message);
+              alert('There was a Network error!');
           }});
       }}
     </script>
