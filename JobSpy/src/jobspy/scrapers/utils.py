@@ -18,7 +18,7 @@ def create_logger(name: str):
     logger.propagate = False
     if not logger.handlers:
         logger.setLevel(logging.INFO)
-        console_handler = logging.FileHandler("output.log")
+        console_handler = logging.StreamHandler()
         format = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
         formatter = logging.Formatter(format)
         console_handler.setFormatter(formatter)
