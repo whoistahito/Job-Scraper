@@ -34,7 +34,7 @@ class UserManager:
 
 class UserEmailManager:
     def add_sent_email(self, email, job_url, position, location):
-        user = SlsentEmail(email=email, job_url=job_url, position=position, location=location)
+        user = SentEmail(email=email, job_url=job_url, position=position, location=location)
         db.session.add(user)
         db.session.commit()
 
