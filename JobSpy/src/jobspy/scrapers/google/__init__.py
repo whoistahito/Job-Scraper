@@ -316,8 +316,4 @@ class GoogleJobsScraper(Scraper):
                 logger.error(f"Received empty responses consistently for {q} . Stopping retry attempts.")
                 return None
 
-        if try_count < 2:
-            time.sleep(60 * 10)
-            return self.get_response(batch_size, q, try_count + 1, empty_counter)
-
         return None
