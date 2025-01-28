@@ -77,11 +77,12 @@ def notify_jobs(filtered_jobs: pd.DataFrame, email: str, position: str, location
         filtered_jobs['has_salary'] = filtered_jobs["min_amount"].notna() | filtered_jobs["max_amount"].notna()
         html_content = ''.join(filtered_jobs.apply(create_job_card, axis=1))
         html_template = get_html_template(html_content, email, position, location)
-        send_email(html_template, email, is_html=True)
+        send_email(html_template,"Found some job opportunities for you!", email, is_html=True)
         return True
 
     logger.error("No jobs found based on the criteria.")
     return False
+
 
 def check_for_new_users():
     """
@@ -92,6 +93,7 @@ def check_for_new_users():
         for user in new_users:
             notify_user(user)
             UserManager().mark_user_as_not_new(user.email)
+
 
 def notify_users() -> None:
     """

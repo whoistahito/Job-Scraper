@@ -8,7 +8,7 @@ from credential import Credential
 logger = create_logger("email_manager")
 
 
-def send_email(body, receiver_email, is_html=True):
+def send_email(body, subject,receiver_email, is_html=True):
     cred = Credential()
     # Email configuration
     smtp_server = "smtp.gmail.com"
@@ -16,8 +16,6 @@ def send_email(body, receiver_email, is_html=True):
     sender_email = cred.get_email_address()
     password = cred.get_email_password()
 
-    # Create the email content
-    subject = "Found some job opportunities for you!"
 
     # Set up the MIME
     message = MIMEMultipart()
