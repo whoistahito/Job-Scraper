@@ -133,7 +133,7 @@ def get_html_template(html_content, email, position, location):
             {html_content}
           </div>
            <p class="unsubscribe-text">Don't want to receive these emails anymore?</p>
-          <button class="unsubscribe-button" onclick="unsubscribe()">Unsubscribe</button>
+          <a class="unsubscribe-button" href="{unsubscribe_url}?email={email}&position={position}&location={location}">Unsubscribe</a>
 
         </td>
       </tr>
