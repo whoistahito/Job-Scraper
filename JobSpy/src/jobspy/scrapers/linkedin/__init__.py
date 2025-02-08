@@ -140,7 +140,7 @@ class LinkedInScraper(Scraper):
                         job_post = self._process_job(job_card, job_id, fetch_desc)
                         if job_post:
                             job_list.append(job_post)
-                        if not continue_search() or len(job_list) < 1 :
+                        if not continue_search() or len(job_list) > 1 :
                             break
                     except Exception as e:
                         raise LinkedInException(str(e))
