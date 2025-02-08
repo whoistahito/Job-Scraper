@@ -124,7 +124,7 @@ class LinkedInScraper(Scraper):
 
             res = self.get_response(100, params)
             if not res:
-                break
+                raise Exception(f"Failed to scrape linkedin for {self.scraper_input.search_term}")
             for job_card in res:
                 href_tag = job_card.find("a", class_="base-card__full-link")
                 if href_tag and "href" in href_tag.attrs:
