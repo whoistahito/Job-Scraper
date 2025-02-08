@@ -273,25 +273,6 @@ def get_html_template(html_content, email, position, location):
       </tr>
     </table>
 
-    <script>
-      function unsubscribe() {{
-          fetch("{unsubscribe_url}?email={email}&position={position}&location={location}", {{
-              method: 'GET',
-              headers: {{
-                  'Content-Type': 'application/json'
-              }}
-          }})
-          .then(response => {{
-              if (response.ok) {{
-              }} else {{
-                  alert('There was an error. Please try again later.');
-              }}
-          }})
-          .catch(error => {{
-              alert('There was a Network error!');
-          }});
-      }}
-    </script>
 </body>
 </html>
 """
