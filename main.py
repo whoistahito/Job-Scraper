@@ -143,7 +143,7 @@ def notify_user(user):
 
 
 if __name__ == "__main__":
-    schedule.every().day.at("11:45").do(
+    schedule.every().day.at("12:45").do(
         lambda: notify_users())
 
     while True:

@@ -163,9 +163,7 @@ def create_job_card(row):
     - new_badge: bool (optional)
     """
     # Convert date to proper format if it's a string or datetime
-    if isinstance(row['date_posted'], str):
-        posted_date = datetime.strptime(row['date_posted'], '%Y-%m-%d').strftime('%d/%m/%Y')
-    elif isinstance(row['date_posted'], datetime):
+    if isinstance(row['date_posted'], datetime):
         posted_date = row['date_posted'].strftime('%d/%m/%Y')
     else:
         posted_date = 'this Week'
