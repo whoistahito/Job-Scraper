@@ -11,7 +11,7 @@ from JobSpy.src.jobspy.scrapers.utils import create_logger
 from db.database_service import UserManager, UserEmailManager
 from email_manager import send_email
 from html_render import create_job_card, get_html_template,get_welcome_message
-from llm import validate_job_title
+from llm import validate_job_title,validate_location
 
 logger = create_logger("main")
 
@@ -121,7 +121,11 @@ def notify_user(user):
                                       )
         ]
 
-        filtered_jobs = jobs_df[
+        location_filtered = jobs_df[
+            jobs_df['location'].apply(lambda location: validate_location(location))
+        ].copy()
+
+        filtered_jobs = location_filtered[
             jobs_df['title'].apply(lambda title: validate_job_title(title, user.position))
         ].copy()
 
