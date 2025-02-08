@@ -52,7 +52,7 @@ class LinkedInScraper(Scraper):
     jobs_per_page = 25
 
     def __init__(
-        self, proxies: list[str] | str | None = None, ca_cert: str | None = None
+            self, proxies: list[str] | str | None = None, ca_cert: str | None = None
     ):
         """
         Initializes LinkedInScraper with the LinkedIn job search url
@@ -140,12 +140,12 @@ class LinkedInScraper(Scraper):
                         job_post = self._process_job(job_card, job_id, fetch_desc)
                         if job_post:
                             job_list.append(job_post)
-                        if not continue_search():
+                        if not continue_search() or len(job_list) < 1 :
                             break
                     except Exception as e:
                         raise LinkedInException(str(e))
 
-            if continue_search() and (request_count / math.ceil(scraper_input.results_wanted / 10)) < 2:
+            if continue_search():
                 time.sleep(random.uniform(self.delay, self.delay + self.band_delay))
                 start += len(job_list)
 
@@ -153,7 +153,7 @@ class LinkedInScraper(Scraper):
         return JobResponse(jobs=job_list)
 
     def _process_job(
-        self, job_card: Tag, job_id: str, full_descr: bool
+            self, job_card: Tag, job_id: str, full_descr: bool
     ) -> Optional[JobPost]:
         salary_tag = job_card.find("span", class_="job-search-card__salary-info")
 
