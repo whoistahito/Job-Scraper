@@ -91,7 +91,7 @@ class LinkedInScraper(Scraper):
             scraper_input.search_term += " Werkstudent"
 
         continue_search = (
-            lambda: len(job_list) < scraper_input.results_wanted and start < 1000
+            lambda: len(job_list) < 1
         )
         while continue_search():
             request_count += 1
