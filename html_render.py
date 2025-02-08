@@ -168,7 +168,7 @@ def create_job_card(row):
     elif isinstance(row['date_posted'], datetime):
         posted_date = row['date_posted'].strftime('%d/%m/%Y')
     else:
-        posted_date = row['date_posted']
+        posted_date = 'this Week'
 
     # New badge HTML - only show if is_new is True
     new_badge = '''
@@ -216,7 +216,7 @@ def create_job_card(row):
                     <tr>
                         <td>
                             <p style="color: #6B7280; font-size: 14px; margin: 0 0 8px 0;">📍 {row['location']}</p>
-                            <p style="color: #6B7280; font-size: 14px; margin: 0;">🕒 Posted: {row['date_posted'] if row['date_posted'] else 'this Week'}</p>
+                            <p style="color: #6B7280; font-size: 14px; margin: 0;">🕒 Posted: {posted_date}</p>
                         </td>
                     </tr>
                 </table>
@@ -242,7 +242,7 @@ def create_job_card(row):
     '''
 
 
-def get_html_template(html_content, email,position,location):
+def get_html_template(html_content, email, position, location):
     """
     Creates the complete HTML email template with the job cards content.
 
