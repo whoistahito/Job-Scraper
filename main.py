@@ -1,17 +1,17 @@
 import random
 import time
-from typing import List, Optional
+from typing import Optional
 
 import pandas as pd
-import schedule
-from app import app
+
 from JobSpy.src.jobspy import Site
 from JobSpy.src.jobspy import scrape_jobs
 from JobSpy.src.jobspy.scrapers.utils import create_logger
+from app import app
 from db.database_service import UserManager, UserEmailManager
 from email_manager import send_email
-from html_render import create_job_card, get_html_template,get_welcome_message
-from llm import validate_job_title,validate_location
+from html_render import create_job_card, get_html_template, get_welcome_message
+from llm import validate_job_title, batch_process,validate_location
 
 logger = create_logger("main")
 
@@ -77,7 +77,7 @@ def notify_jobs(filtered_jobs: pd.DataFrame, email: str, position: str, location
         filtered_jobs['has_salary'] = filtered_jobs["min_amount"].notna() | filtered_jobs["max_amount"].notna()
         html_content = ''.join(filtered_jobs.apply(create_job_card, axis=1))
         html_template = get_html_template(html_content, email, position, location)
-        send_email(html_template,"Found some job opportunities for you!", email, is_html=True)
+        send_email(html_template, "Found some job opportunities for you!", email, is_html=True)
         return True
 
     logger.error("No jobs found based on the criteria.")
@@ -92,7 +92,7 @@ def check_for_new_users():
         new_users = UserManager().get_new_users()
         for user in new_users:
             send_email(get_welcome_message(), "Welcome to Your Job Finder!", user.email, is_html=True)
-            UserManager().mark_user_as_not_new(user.email,user.position,user.location)
+            UserManager().mark_user_as_not_new(user.email, user.position, user.location)
             notify_user(user)
 
 
@@ -120,14 +120,20 @@ def notify_user(user):
                                       UserEmailManager().is_sent(user.email, url, user.position, user.location)
                                       )
         ]
+        jobs_df = jobs_df[:15]
 
-        location_filtered = jobs_df[
-            jobs_df['location'].apply(lambda location: validate_location(location))
-        ].copy()
+        # Uniform location
+        validated_locations = batch_process(validate_location, jobs_df['location'].tolist())
+        jobs_df['location'] = validated_locations
 
-        filtered_jobs = location_filtered[
-            jobs_df['title'].apply(lambda title: validate_job_title(title, user.position))
-        ].copy()
+        time.sleep(50)
+
+        # Filter out unrelated titles
+        job_title_search_pairs = [(title, user.position) for title in jobs_df['title']]
+        is_related_results = batch_process(validate_job_title, job_title_search_pairs)
+        jobs_df['is_related'] = is_related_results
+
+        filtered_jobs = jobs_df[jobs_df['is_related']].copy()
 
         if notify_jobs(filtered_jobs, user.email, user.position, user.location):
             filtered_jobs.apply(
