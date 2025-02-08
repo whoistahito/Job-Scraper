@@ -3,6 +3,7 @@ import time
 from typing import Optional
 
 import pandas as pd
+import schedule
 
 from JobSpy.src.jobspy import Site
 from JobSpy.src.jobspy import scrape_jobs
@@ -11,7 +12,7 @@ from app import app
 from db.database_service import UserManager, UserEmailManager
 from email_manager import send_email
 from html_render import create_job_card, get_html_template, get_welcome_message
-from llm import validate_job_title, batch_process,validate_location
+from llm import validate_job_title, batch_process, validate_location
 
 logger = create_logger("main")
 
