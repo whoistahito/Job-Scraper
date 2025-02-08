@@ -138,7 +138,7 @@ class GoogleJobsScraper(Scraper):
         if self.scraper_input.google_search_term:
             query = self.scraper_input.google_search_term
 
-        response = self.get_response(400, query)
+        response = self.get_response(200, query)
 
         if response is None:
             raise Exception(f"Failed to scrape google for {self.scraper_input.search_term}")
