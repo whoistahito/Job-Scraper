@@ -1,3 +1,4 @@
+from datetime import datetime
 import random
 
 greetings = [
@@ -149,131 +150,178 @@ Find your next job easily with our app. We search the internet based on what you
 
 
 def create_job_card(row):
-    new_badge = "<span style='display: inline-block; background-color: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 9999px; font-size: 12px; margin-left: 8px;'>New</span>" if \
-        row['new_badge'] else ""
+    """
+    Creates an HTML job card from a pandas DataFrame row.
 
-    salary_info = f"<p style='padding: 0 0 4px 0; font-size: 14px; color: #4b5563;'>💰 {row.get('min_amount', '')} - {row.get('max_amount', '')}</p>" if \
-        row['has_salary'] else ""
+    Expected columns in row:
+    - title: str
+    - company: str
+    - location: str
+    - date_posted: datetime or str
+    - is_remote: bool
+    - job_url: str
+    - new_badge: bool (optional)
+    """
+    # Convert date to proper format if it's a string or datetime
+    if isinstance(row['date_posted'], str):
+        posted_date = datetime.strptime(row['date_posted'], '%Y-%m-%d').strftime('%d/%m/%Y')
+    elif isinstance(row['date_posted'], datetime):
+        posted_date = row['date_posted'].strftime('%d/%m/%Y')
+    else:
+        posted_date = row['date_posted']
 
-    html_card = f"""
-    <table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 20px; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+    # New badge HTML - only show if is_new is True
+    new_badge = '''
+    <tr>
+        <td style="padding-top: 8px;">
+            <span style="display: inline-block; background-color: #DCFCE7; color: #15803D; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600;">● New</span>
+        </td>
+    </tr>
+    ''' if row.get('new_badge', False) else ''
+
+    # Remote badge - only show if remote is True
+    remote_badge = '''
+    <tr>
+        <td style="padding-bottom: 12px;">
+            <span style="display: inline-block; background-color: #EEF2FF; color: #4F46E5; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500;">Remote</span>
+        </td>
+    </tr>
+    ''' if row['is_remote'] else ''
+
+    return f'''
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F8FAFF; border: 1px solid #E5E7EB; border-radius: 12px; margin-bottom: 16px;">
         <tr>
-            <td style="padding: 16px;">
-                <table cellpadding="0" cellspacing="0" style="width: 100%;">
+            <td style="padding: 20px;">
+                <!-- Job Title and New Badge -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 12px;">
                     <tr>
                         <td>
-                            <h2 style="padding: 0; font-size: 18px; color: #1f2937; font-weight: 600; margin-bottom: 8px;">
-                                {row['title']}
-                                {new_badge}  <!-- Include new badge conditionally -->
-                            </h2>
-                            <p style="padding: 0; font-size: 14px; color: #4b5563;">{row['company']}</p>
+                            <h2 style="color: #1F2937; font-size: 18px; margin: 0; font-weight: 600;">{row['title']}</h2>
                         </td>
                     </tr>
+                    {new_badge}
+                </table>
+
+                <!-- Company Name -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 12px;">
                     <tr>
-                        <td style="padding-top: 12px;">
-                            <p style="padding: 0 0 4px 0; font-size: 14px; color: #4b5563;">📍 {row['location']}</p>
-                            {salary_info}  
-                            <p style="padding: 0; font-size: 14px; color: #4b5563;">💻 {'Remote' if row['job_type'] else 'Not Remote'}</p>
+                        <td>
+                            <p style="color: #4B5563; font-size: 16px; margin: 0; font-weight: 500;">{row['company']}</p>
                         </td>
                     </tr>
                 </table>
-            </td>
-        </tr>
-        <tr>
-            <td style="border-top: 1px solid #e5e7eb; padding: 12px 16px; background-color: #f9fafb;">
-                <table cellpadding="0" cellspacing="0" style="width: 100%;">
+
+                <!-- Location and Date -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 12px;">
                     <tr>
-                        <td style="font-size: 12px; color: #6b7280;">Posted on {row['date_posted'] if row['date_posted'] else 'this Week'}</td>
-                        <td align="right">
-                            <a href="{row['job_url']}" style="background-color: #3b82f6; color: #ffffff; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-size: 14px;">View Job</a>
+                        <td>
+                            <p style="color: #6B7280; font-size: 14px; margin: 0 0 8px 0;">📍 {row['location']}</p>
+                            <p style="color: #6B7280; font-size: 14px; margin: 0;">🕒 Posted: {row['date_posted'] if row['date_posted'] else 'this Week'}</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Remote Badge and Button -->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                    {remote_badge}
+                    <tr>
+                        <td>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td>
+                                        <a href="{row['job_url']}" style="display: inline-block; background-color: #4F46E5; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500; text-align: center; width: 100%; box-sizing: border-box;">View Details →</a>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
             </td>
         </tr>
     </table>
+    '''
+
+
+def get_html_template(html_content, email,position,location):
     """
-    return html_card
+    Creates the complete HTML email template with the job cards content.
 
-
-def get_html_template(html_content, email, position, location):
-    unsubscribe_url = "https://yourjobfinder.website/unsubscribe/process"  # Replace with your unsubscribe URL
-
-    html_template = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Opportunities</title>
-    <style>
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f3f4f6;
-            padding: 0;
-            margin: 0;
-        }}
-        .email-container {{
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-        }}
-        .job-card {{
-            border-bottom: 1px solid #e5e7eb;
-            padding: 16px 0;
-        }}
-        .unsubscribe-button {{
-            display: inline-block;
-            background-color: #FF4041;
-            color: #ffffff;
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-top: 20px;
-        }}
-        .unsubscribe-text {{
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 20px;
-        }}
-    </style>
-</head>
-<body>
-    <table cellpadding="0" cellspacing="0" style="
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #f3f4f6;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    ">
-      <tr>
-        <td style="padding: 32px 24px;">
-          <table cellpadding="0" cellspacing="0" style="width: 100%; margin-bottom: 24px;">
+    Args:
+        html_content (str): The concatenated job cards HTML
+        email (str): The recipient's username/email
+        position (str) : preferred job position
+        location (str) : preferred job location
+    Returns:
+        str: Complete HTML email template
+    """
+    unsubscribe_url = "https://yourjobfinder.website/unsubscribe/process"
+    return f'''
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Job Listings</title>
+        <!--[if mso]>
+        <style type="text/css">
+        body, table, td {{font-family: Arial, Helvetica, sans-serif !important;}}
+        </style>
+        <![endif]-->
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #F3F4F6; -webkit-font-smoothing: antialiased;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F3F4F6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
             <tr>
-              <td>
-                <h1 style="
-                  margin: 0 0 8px;
-                  font-size: 24px;
-                  font-weight: bold;
-                  color: #1f2937;
-                ">{random.choice(greetings)}</h1>
-              </td>
+                <td align="center" style="padding: 24px 12px;">
+                    <!-- Main Container -->
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 600px;">
+                        <!-- Header with Logo -->
+                        <tr>
+                            <td style="padding: 32px 24px; background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%); border-radius: 12px 12px 0 0;">
+                                <h1 style="color: #ffffff; font-size: 24px; margin: 0; font-weight: 700;">Job Alerts</h1>
+                                <p style="color: #E0E7FF; font-size: 16px; margin: 8px 0 0 0;">Latest opportunities for you</p>
+                            </td>
+                        </tr>
+
+                        <!-- Welcome Message -->
+                        <tr>
+                            <td style="padding: 24px;">
+                                <h2 style="color: #4B5563; font-size: 16px; margin: 12px 0 0 0; line-height: 1.5;">{random.choice(greetings)}</h2>
+                            </td>
+                        </tr>
+
+                        <!-- Job Cards Container -->
+                        <tr>
+                            <td style="padding: 0 24px;">
+                                {html_content}
+                            </td>
+                        </tr>
+
+                        <!-- Footer -->
+                        <tr>
+                            <td style="padding: 32px 24px; border-top: 1px solid #E5E7EB;">
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                    <tr>
+                                        <td align="center">
+                                            <p style="color: #6B7280; font-size: 14px; margin: 0 0 16px 0;">Prefer not to receive these updates?</p>
+                                            <a href="href="{unsubscribe_url}?email={email}&position={position}&location={location}">Unsubscribe" style="color: #4B5563; text-decoration: underline; font-size: 14px;">Unsubscribe</a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Footer Message -->
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
+                        <tr>
+                            <td align="center" style="padding: 24px 12px;">
+                                <p style="color: #6B7280; font-size: 12px; margin: 0;">This email was sent by Job Board. Please do not reply to this email.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
             </tr>
-          </table>
-
-          <div class="email-container">
-            {html_content}
-          </div>
-           <p class="unsubscribe-text">Don't want to receive these emails anymore?</p>
-          <a class="unsubscribe-button" href="{unsubscribe_url}?email={email}&position={position}&location={location}">Unsubscribe</a>
-
-        </td>
-      </tr>
-    </table>
-
-</body>
-</html>
-"""
-    return html_template
+        </table>
+    </body>
+    </html>
+    '''
