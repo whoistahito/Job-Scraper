@@ -207,6 +207,7 @@ def scrape_jobs(
         jobs_df = pd.concat(filtered_dfs, ignore_index=True)
 
         jobs_df['date_posted'] = pd.to_datetime(jobs_df['date_posted']).dt.date
+        jobs_df = jobs_df.sort_values(by='date_posted')
 
         today = datetime.today().date()  # Get today's date in date format
         jobs_df['new_badge'] = jobs_df['date_posted'] == today
