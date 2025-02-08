@@ -127,7 +127,7 @@ def notify_user(user):
         validated_locations = batch_process(validate_location, jobs_df['location'].tolist())
         jobs_df['location'] = validated_locations
 
-        time.sleep(50)
+        time.sleep(61)
 
         # Filter out unrelated titles
         job_title_search_pairs = [(title, user.position) for title in jobs_df['title']]
