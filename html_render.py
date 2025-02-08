@@ -301,7 +301,7 @@ def get_html_template(html_content, email, position, location):
                                     <tr>
                                         <td align="center">
                                             <p style="color: #6B7280; font-size: 14px; margin: 0 0 16px 0;">Prefer not to receive these updates?</p>
-                                            <a href="{unsubscribe_url}?email={email}&position={position}&location={location}">Unsubscribe" style="color: #4B5563; text-decoration: underline; font-size: 14px;">Unsubscribe</a>
+                                            <a href="{unsubscribe_url}?email={email}&position={position}&location={location}" style="color: #4B5563; text-decoration: underline; font-size: 14px;">Unsubscribe</a>
                                         </td>
                                     </tr>
                                 </table>
