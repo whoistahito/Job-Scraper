@@ -145,7 +145,7 @@ class LinkedInScraper(Scraper):
                     except Exception as e:
                         raise LinkedInException(str(e))
 
-            if continue_search():
+            if continue_search() and (request_count / math.ceil(scraper_input.results_wanted / 10)) < 2:
                 time.sleep(random.uniform(self.delay, self.delay + self.band_delay))
                 start += len(job_list)
 
