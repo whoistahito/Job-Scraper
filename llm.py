@@ -51,7 +51,6 @@ def validate_job_title(job_title, search_term, try_count=1):
     cred = Credential()
     genai.configure(api_key=cred.get_google_api())
     model = genai.GenerativeModel("gemini-2.0-flash")
-    time.sleep(4.5)
     response = model.generate_content(f"""
     Below are some examples showing a question, job title, search term, and answer format:
     
@@ -87,7 +86,6 @@ def validate_location(location):
     cred = Credential()
     genai.configure(api_key=cred.get_google_api())
     model = genai.GenerativeModel("gemini-2.0-flash")
-    time.sleep(4.5)
     response = model.generate_content(f"""
     Below are some examples showing a question, job title, search term, and answer format:
 
