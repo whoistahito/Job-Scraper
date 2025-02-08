@@ -50,7 +50,7 @@ def try_find_jobs(
         search_term: str,
         location: str,
         job_type: Optional[str],
-        max_retries: int = 3,
+        max_retries: int = 2,
 ) -> pd.DataFrame:
     """
     Process job scraping for a single site, retry if needed,

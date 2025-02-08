@@ -442,7 +442,7 @@ class LinkedInScraper(Scraper):
                     logger.error(f'Proxy {proxy} generated an exception: {exc}')
         return None
 
-    def get_response(self, batch_size, q, try_count=0, empty_counter=0, empty_threshold=3):
+    def get_response(self, batch_size, q, empty_counter=0, empty_threshold=3):
         all_proxies = get_socks_proxies()
 
         for start_index in range(0, len(all_proxies), batch_size):
@@ -469,9 +469,5 @@ class LinkedInScraper(Scraper):
             if empty_counter >= empty_threshold:
                 logger.error(f"Received empty responses consistently for {q['keywords']} . Stopping retry attempts.")
                 return None
-
-        if try_count < 2:
-            time.sleep(60 * 10)
-            return self.get_response(batch_size, q, try_count + 1, empty_counter)
 
         return None

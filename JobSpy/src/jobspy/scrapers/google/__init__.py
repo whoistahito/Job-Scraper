@@ -138,7 +138,7 @@ class GoogleJobsScraper(Scraper):
         if self.scraper_input.google_search_term:
             query = self.scraper_input.google_search_term
 
-        response = self.get_response(200, query)
+        response = self.get_response(400, query)
 
         if response is None:
             raise Exception(f"Failed to scrape google for {self.scraper_input.search_term}")
@@ -291,7 +291,7 @@ class GoogleJobsScraper(Scraper):
                     logger.error(f'Proxy {proxy} generated an exception: {exc}')
         return None
 
-    def get_response(self, batch_size, q, try_count=0,empty_counter=0, empty_threshold=6):
+    def get_response(self, batch_size, q, empty_counter=0, empty_threshold=3):
         all_proxies = get_socks_proxies()
 
         for start_index in range(0, len(all_proxies), batch_size):
