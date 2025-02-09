@@ -211,9 +211,6 @@ def scrape_jobs(
         today = datetime.today().date()  # Get today's date in date format
         jobs_df['new_badge'] = jobs_df['date_posted'] == today
 
-        # Fill NaN values in 'date_posted' with the string "this week"
-        jobs_df['date_posted'] = jobs_df['date_posted'].fillna('this week')
-
         # Desired column order
         desired_order = [
             "id",
