@@ -121,13 +121,11 @@ def notify_user(user):
                                       UserEmailManager().is_sent(user.email, url, user.position, user.location)
                                       )
         ]
-        jobs_df = jobs_df[:15]
+        jobs_df = jobs_df[:7]
 
         # Uniform location
         validated_locations = batch_process(validate_location, jobs_df['location'].tolist())
         jobs_df['location'] = validated_locations
-
-        time.sleep(61)
 
         # Filter out unrelated titles
         job_title_search_pairs = [(title, user.position) for title in jobs_df['title']]
