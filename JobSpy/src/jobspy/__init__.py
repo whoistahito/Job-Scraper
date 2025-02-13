@@ -200,19 +200,19 @@ def scrape_jobs(
             jobs_dfs.append(job_df)
 
     if jobs_dfs:
-        # Step 1: Filter out all-NA columns from each DataFrame before concatenation
-        filtered_dfs = [df.dropna(axis=1, how="all") for df in jobs_dfs]
-
-        # Step 2: Concatenate the filtered DataFrames
-        jobs_df = pd.concat(filtered_dfs, ignore_index=True)
+        jobs_df = pd.concat(jobs_dfs, ignore_index=True)
 
         # Convert to datetime and handle NaT values when converting to date
-        jobs_df['date_posted'] = pd.to_datetime(jobs_df['date_posted'], errors='coerce')
-        jobs_df['date_posted'] = jobs_df['date_posted'].dt.date.fillna(pd.NaT)
+        jobs_df['date_posted'] = pd.to_datetime(jobs_df['date_posted'], errors='coerce').dt.strftime('%Y-%m-%d')
 
         today = datetime.today().date()  # Get today's date in date format
         # Compare dates and handle NaT values
         jobs_df['new_badge'] = jobs_df['date_posted'].notna() & (jobs_df['date_posted'] == today)
+
+        # Filter out all-NA columns from each DataFrame before concatenation
+        filtered_dfs = [df.dropna(axis=1, how="all") for df in jobs_dfs]
+        # Step 2: Concatenate the filtered DataFrames
+        jobs_df = pd.concat(filtered_dfs, ignore_index=True)
 
         # Desired column order
         desired_order = [
