@@ -132,7 +132,8 @@ def notify_user(user):
         is_related_results = batch_process(validate_job_title, job_title_search_pairs)
         jobs_df['is_related'] = is_related_results
 
-        filtered_jobs = jobs_df[jobs_df['is_related']].copy().sort_values(
+        filtered_jobs = jobs_df[jobs_df['is_related']].copy()
+        filtered_jobs = filtered_jobs.sort_values(
             by=["site", "date_posted"], ascending=[True, False]
         ).reset_index(drop=True)
 
