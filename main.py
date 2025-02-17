@@ -74,6 +74,10 @@ def notify_jobs(filtered_jobs: pd.DataFrame, email: str, position: str, location
     Send notification email if there are filtered jobs based on refined criteria.
     """
     if not filtered_jobs.empty:
+        # Sort jobs by site and date posted
+        filtered_jobs = filtered_jobs.sort_values(
+            by=["site", "date_posted"], ascending=[True, False]
+        ).reset_index(drop=True)
         # Filter and render job listings
         filtered_jobs['has_salary'] = filtered_jobs["min_amount"].notna() | filtered_jobs["max_amount"].notna()
         html_content = ''.join(filtered_jobs.apply(create_job_card, axis=1))
@@ -133,9 +137,6 @@ def notify_user(user):
         jobs_df['is_related'] = is_related_results
 
         filtered_jobs = jobs_df[jobs_df['is_related']].copy()
-        filtered_jobs = filtered_jobs.sort_values(
-            by=["site", "date_posted"], ascending=[True, False]
-        ).reset_index(drop=True)
 
         if notify_jobs(filtered_jobs, user.email, user.position, user.location):
             filtered_jobs.apply(
