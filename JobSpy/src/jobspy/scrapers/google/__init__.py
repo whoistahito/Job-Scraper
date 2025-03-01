@@ -141,7 +141,7 @@ class GoogleJobsScraper(Scraper):
         response = self.get_response(200, query)
 
         if response is None:
-            raise Exception(f"Failed to scrape google for {self.scraper_input.search_term}")
+            raise Exception(f"Failed to scrape google for {query}")
 
         pattern_fc = r'<div jsname="Yust4d"[^>]+data-async-fc="([^"]+)"'
         match_fc = re.search(pattern_fc, response.text)
