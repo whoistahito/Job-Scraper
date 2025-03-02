@@ -31,17 +31,21 @@ def find_jobs(
         search_term += " " + "Werkstudent"
         job_type = None
 
+    if location.lower().strip() == "remote":
+        location = "Worldwide"
+
     return scrape_jobs(
         site_name=site,
         search_term=search_term,
         job_type=job_type,
         radius=15,
-        location=location.split(",")[0].strip() if location.split(",")[0].strip() else " ",
+        location=location.split(",")[0].strip() if location.split(",")[0].strip() else "worldwide",
         results_wanted=10,
         hours_old=120,
-        country_indeed=location.split(",")[-1].strip() if location.split(",")[-1].strip() else "Germany",
+        country_indeed=location.split(",")[-1].strip() if location.split(",")[-1].strip() else "worldwide",
         proxies=None,
-        enforce_annual_salary=True
+        enforce_annual_salary=True,
+        is_remote=location.lower().strip() == "remote",
     )
 
 

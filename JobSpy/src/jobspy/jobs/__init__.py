@@ -136,6 +136,7 @@ class Country(Enum):
 
     # internal for linkedin
     WORLDWIDE = ("worldwide", "www")
+    REMOTE = ("remote", "www")
 
     @property
     def indeed_domain_value(self):
