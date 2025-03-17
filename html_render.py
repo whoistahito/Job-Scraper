@@ -1,3 +1,4 @@
+import datetime
 import random
 from dateutil import parser
 greetings = [
@@ -162,9 +163,8 @@ def create_job_card(row):
     - new_badge: bool (optional)
     """
     # Convert date to proper format if it's a string or datetime
-    if isinstance(row['date_posted'], str):
-        parsed = parser.parse((row['date_posted']))
-        posted_date = parsed.strftime("%b %d, %Y")
+    if isinstance(row['date_posted'], datetime.date):
+        posted_date = row['date_posted'].strftime("%b %d, %Y")
     else:
         posted_date = 'this Week'
 
