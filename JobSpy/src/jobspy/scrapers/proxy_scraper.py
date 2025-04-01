@@ -111,6 +111,46 @@ class GeoNodeScraper(Scraper):
                                **kwargs)
 
 
+# From proxylib.com
+class ProxyLibScraper(Scraper):
+    def __init__(self, method, limit="200", sort_by="last_checked", sort_order="desc", country_code="",
+                 anonymity="Elite"):
+        self.limit = limit
+        self.sort_by = sort_by
+        self.sort_order = sort_order
+        self.country_code = country_code
+        self.anonymity = anonymity
+        super().__init__(method,
+                         "https://proxylib.com/free-proxy-list/?limit={limit}&sort_by={sort_by}&sort_order={sort_order}&country_code={country_code}&type={method}&anonymity={anonymity}")
+
+    def get_url(self, **kwargs):
+        return super().get_url(limit=self.limit, sort_by=self.sort_by, sort_order=self.sort_order,
+                               country_code=self.country_code, anonymity=self.anonymity, **kwargs)
+
+    async def handle(self, response):
+                soup = BeautifulSoup(response.text, "html.parser")
+                proxies = set()
+
+                # Find all script tags with type="application/ld+json"
+                script_tags = soup.find_all("script", type="application/ld+json")
+
+                # Look for the script tag that contains proxy data
+                for script_tag in script_tags:
+                    if script_tag and '"@type": "ItemList"' in script_tag.string and '"name": "Proxy Server List"' in script_tag.string:
+                        try:
+                            import json
+                            json_data = json.loads(script_tag.string)
+                            items = json_data.get("itemListElement", [])
+
+                            for item in items:
+                                if "item" in item and "name" in item["item"]:
+                                    proxy = item["item"]["name"]
+                                    if ":" in proxy:  # Validate proxy format
+                                        proxies.add(proxy)
+                        except json.JSONDecodeError:
+                            pass
+
+                return "\n".join(proxies)
 # From proxy-list.download
 class ProxyListDownloadScraper(Scraper):
 
@@ -226,11 +266,14 @@ scrapers = [
     ProxyScrapeScraper("http"),
     ProxyScrapeScraper("socks5"),
     GeoNodeScraper("socks"),
+    ProxyLibScraper("https"),
     ProxyListDownloadScraper("https", "elite"),
     ProxyListDownloadScraper("http", "elite"),
     ProxyListDownloadScraper("http", "transparent"),
     ProxyListDownloadScraper("http", "anonymous"),
     GeneralTableScraper("https", "http://sslproxies.org"),
+    GeneralTableScraper("https",
+                        "https://proxylib.com/free-proxy-list/?limit=200&sort_by=last_checked&sort_order=desc&country_code=&type=&anonymity=Elite"),
     GeneralTableScraper2("socks5", "http://free-proxy.cz/en/proxylist/country/all/socks5/ping/level1"),
     GeneralTableScraper2("https", "http://free-proxy.cz/en/proxylist/country/all/https/ping/level1"),
     GeneralTableScraper("http", "http://free-proxy-list.net"),
@@ -279,13 +322,16 @@ async def scrape(methods):
 
 
 def get_socks_proxies():
-    proxies_set = asyncio.run(scrape([ "socks5", "socks4"]))
+    proxies_set = asyncio.run(scrape(["socks5", "socks4"]))
     return list(proxies_set)
 
+def get_https_proxies():
+    proxies_set = asyncio.run(test_scraper())
+    return list(proxies_set)
 
 async def test_scraper():
     async with httpx.AsyncClient(follow_redirects=True) as client:
-        scraper = GeneralTableScraper("socks5", "http://free-proxy.cz/en/proxylist/country/all/socks5/ping/level1")
+        scraper = ProxyLibScraper("https")
         # Scrap the proxies using the SpysMeScraper
         proxies = await scraper.scrape(client)
-        print(proxies)
+        return list(proxies)
