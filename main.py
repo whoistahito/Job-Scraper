@@ -79,6 +79,7 @@ def notify_jobs(filtered_jobs: pd.DataFrame, email: str, position: str, location
     """
     if not filtered_jobs.empty:
         # Sort jobs by site and date posted
+        filtered_jobs = filtered_jobs[~filtered_jobs['job_url'].map(lambda url: "campaign" not in url)]
         filtered_jobs = filtered_jobs.sort_values(
             by=["site", "date_posted"], ascending=[True, False]
         ).reset_index(drop=True)
