@@ -133,7 +133,7 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 
 ## Acknowledgments
 
-The JobSpy package used in this project is based on the cullenwatson/JobSpy repository.
+The JobSpy package used in this project is based on the cullenwatson/JobSpy and iw4p/proxy-scraper repository and has been adapted for this project. 
 
 ## License
 
